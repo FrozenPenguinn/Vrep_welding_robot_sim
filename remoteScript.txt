@@ -1,0 +1,51 @@
+threadFunction=function()
+    -- Put your thread code here (initialization and clean-up code should not be in here)
+
+    
+    -- Some EXTERNAL commands (e.g. socket commands provided by Lua libraries)
+    -- might appear as blocking to the simulator. In that case, you can define
+    -- a non-blocking section as following example shows:
+    --
+    -- sim.setThreadIsFree(true) -- Start of the non-blocking section
+    --
+    -- Following 2 lines are meant as an example of EXTERNAL blocking commands:
+    -- http = require("socket.http")
+    -- print(http.request("http://www.google.com"))
+    --
+    -- sim.setThreadIsFree(false) -- End of the non-blocking section
+    --
+    -- While in a non-blocking section, try to avoid calling sim-functions. Also
+    -- never forget to close the blocking section, otherwise V-REP will hang.
+    -- Make sure you read the information related to the sim.setThreadIsFree
+    -- API function in V-REP's documentation.
+
+
+    -- If you wish to synchronize a threaded loop with each simulation pass,
+    -- set the thread switch timing in the initialization phase of this script
+    -- to the maximum (200), and manually switch thread here with the
+    -- sim.switchThread() command. 
+    -- ( sim.switchThread() will suspend this script's execution until next
+    -- simulation pass, i.e. until the simulation time has changed )
+    --
+    -- Following example illustrates this:
+    -- 
+    -- while sim.getSimulationState()~=sim.simulation_advancing_abouttostop do
+    --     local p=sim.getObjectPosition(objHandle,-1)
+    --     p[1]=p[1]+0.001
+    --     sim.setObjectPosition(objHandle,-1,p)
+    --     sim.switchThread()
+    -- end
+end
+
+-- Put some initialization code here:
+sim.setThreadSwitchTiming(2) -- Default timing for automatic thread switching
+simRemoteApi.start(19999)
+
+
+-- Here we execute the regular thread code:
+res,err=xpcall(threadFunction,function(err) return debug.traceback(err) end)
+if not res then
+    sim.addStatusbarMessage('Lua runtime error: '..err)
+end
+
+-- Put some clean-up code here:
