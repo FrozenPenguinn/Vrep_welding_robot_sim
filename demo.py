@@ -142,7 +142,7 @@ while (time.time() - t) < 180:  #loop for 180 seconds
         theta1 = (math.atan(2.0 * (centerx - resolution[0] / 2) * math.tan(persAngle * PI / 360.0) / resolution[0])) * 180 / PI  # sight angle(degree)
         sight_angle.append(theta1)   #sight angle -- left minus;right plus
         speed_thata = min(speed_thata, 1 + (centery - resolution[1] / 2) / (resolution[1] / 2))
-    print('error angle is: ',sight_angle)
+    print("error angle is: ",sight_angle)
     print('error x distance is: ',target_center_x)
 
     cv2.imshow('tracking', image)
