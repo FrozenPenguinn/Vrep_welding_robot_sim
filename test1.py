@@ -9,7 +9,6 @@ import sys
 import time  # used to keep track of time
 import numpy as np  # array library
 import math
-import matplotlib.pyplot as plt  # used for image plotting
 import socket
 import cv2
 
