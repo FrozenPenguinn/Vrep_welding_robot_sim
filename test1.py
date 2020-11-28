@@ -55,14 +55,10 @@ else:
 
 #get handles of four wheels and vision sensor
 armJoints = [1,1,1,1] #wheel joints handle
-armJoints[0] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint0',vrep.simx_opmode_oneshot_wait)
-armJoints[1] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint1',vrep.simx_opmode_oneshot_wait)
-armJoints[2] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint2',vrep.simx_opmode_oneshot_wait)
-armJoints[3] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint3',vrep.simx_opmode_oneshot_wait)
-armJoints[0] = armJoints[0][1]   #because the wheelJoints[0] obtained above was a array made up by two numbers!
-armJoints[1] = armJoints[1][1]
-armJoints[2] = armJoints[2][1]
-armJoints[3] = armJoints[3][1]
+ret1, armJoints[0] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint0',vrep.simx_opmode_oneshot_wait)
+ret2, armJoints[1] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint1',vrep.simx_opmode_oneshot_wait)
+ret3, armJoints[2] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint2',vrep.simx_opmode_oneshot_wait)
+ret4, armJoints[3] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint3',vrep.simx_opmode_oneshot_wait)
 youBot = vrep.simxGetObjectHandle(clientID, 'youBot',vrep.simx_opmode_oneshot_wait)
 youBot = youBot[1]
 time.sleep(0.5)    #initialize the visionsensor
@@ -70,12 +66,13 @@ time.sleep(0.5)    #initialize the visionsensor
 # Move armJoint
 def arm_move():
     vrep.simxSetJointPosition(clientID,armJoints[3],90*PI/180,vrep.simx_opmode_streaming)
-    time.sleep(0.3)
+    time.sleep(0.5)
     vrep.simxSetJointPosition(clientID,armJoints[3],45*PI/180,vrep.simx_opmode_streaming)
-    time.sleep(0.3)
+    time.sleep(0.5)
     vrep.simxSetJointPosition(clientID,armJoints[3],0*PI/180,vrep.simx_opmode_streaming)
-    time.sleep(0.3)
+    time.sleep(0.5)
     vrep.simxSetJointPosition(clientID,armJoints[3],45*PI/180,vrep.simx_opmode_streaming)
+    time.sleep(0.5)
     print('Done')
     #simSetJointPosition(armJoints[1],90*PI/180)
     #simSetJointPosition(armJoints[2],90*PI/180)
@@ -83,7 +80,7 @@ def arm_move():
 
 t= time.time()
 
-while (time.time() - t) < 180:  #loop for 180 seconds
-
-    arm_move()
+if (ret1 == 0 and ret2 == 0 and ret3 == 0 and ret4 == 0):
+    while (time.time() - t) < 180:  #loop for 180 seconds
+        arm_move()
     # if k == 27: break  # esc pressed
