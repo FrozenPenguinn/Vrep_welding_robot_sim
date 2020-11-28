@@ -64,23 +64,41 @@ youBot = youBot[1]
 time.sleep(0.5)    #initialize the visionsensor
 
 # Move armJoint
-def arm_move():
-    vrep.simxSetJointPosition(clientID,armJoints[3],90*PI/180,vrep.simx_opmode_streaming)
+def arm_move(a1,a2,a3,a4):
+    vrep.simxSetJointPosition(clientID,armJoints[0],a1*PI/180,vrep.simx_opmode_streaming)
     time.sleep(0.5)
-    vrep.simxSetJointPosition(clientID,armJoints[3],45*PI/180,vrep.simx_opmode_streaming)
+    vrep.simxSetJointPosition(clientID,armJoints[1],a2*PI/180,vrep.simx_opmode_streaming)
     time.sleep(0.5)
-    vrep.simxSetJointPosition(clientID,armJoints[3],0*PI/180,vrep.simx_opmode_streaming)
+    vrep.simxSetJointPosition(clientID,armJoints[2],a3*PI/180,vrep.simx_opmode_streaming)
     time.sleep(0.5)
-    vrep.simxSetJointPosition(clientID,armJoints[3],45*PI/180,vrep.simx_opmode_streaming)
+    vrep.simxSetJointPosition(clientID,armJoints[3],a4*PI/180,vrep.simx_opmode_streaming)
     time.sleep(0.5)
     print('Done')
     #simSetJointPosition(armJoints[1],90*PI/180)
     #simSetJointPosition(armJoints[2],90*PI/180)
     #simSetJointPosition(armJoints[3],90*PI/180)
+# def constant_arm_move(a1,a2,a3,a4):
+#     for ()
+
+# def smooth_arm_move():
+
 
 t= time.time()
 
 if (ret1 == 0 and ret2 == 0 and ret3 == 0 and ret4 == 0):
-    while (time.time() - t) < 180:  #loop for 180 seconds
-        arm_move()
+    arm_move(0,0,0,0)
+    time.sleep(0.5)
+    arm_move(90,90,90,90)
+    time.sleep(0.5)
+    arm_move(0,0,0,0)
+    time.sleep(0.5)
+    arm_move(90,90,90,90)
+    time.sleep(0.5)
+    arm_move(0,0,0,0)
+    time.sleep(0.5)
+    arm_move(90,90,90,90)
+    time.sleep(0.5)
+    arm_move(0,0,0,0)
+    time.sleep(0.5)
+    arm_move(90,90,90,90)
     # if k == 27: break  # esc pressed
