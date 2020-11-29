@@ -63,18 +63,28 @@ arm_joint_status[3], arm_joint_handle[3] = vrep.simxGetObjectHandle(clientID, 'y
 youBot_status, youBot_handle = vrep.simxGetObjectHandle(clientID, 'youBot',vrep.simx_opmode_oneshot_wait)
 time.sleep(0.5)
 
-# get initial arm angle (in radians)
+# initialize joint angle
 current_arm_angle = [0,0,0,0]
+# get initial arm angle (in radians)
 for i in range(0,4):
     _, current_arm_angle[i] = vrep.simxGetJointPosition(clientID,arm_joint_handle[i],vrep.simx_opmode_blocking)
 # convert to degress
 for i in range(0,4):
     current_arm_angle[i] = current_arm_angle[i] * 180 / PI
-# show
 for i in range(0,4):
     print(current_arm_angle[i])
 
 # get current joint angles (toolbox function)
+def get_current_angle():
+    # get initial arm angle (in radians)
+    for i in range(0,4):
+        _, current_arm_angle[i] = vrep.simxGetJointPosition(clientID,arm_joint_handle[i],vrep.simx_opmode_oneshot_wait)
+    # convert to degress
+    for i in range(0,4):
+        current_arm_angle[i] = current_arm_angle[i] * 180 / PI
+    for i in range(0,4):
+        print(current_arm_angle[i])
+
 
 # Move armJoint in absolute position (P system setting)
 def arm_move_absolute(a0=current_arm_angle[0],a1=current_arm_angle[1],a2=current_arm_angle[2],a3=current_arm_angle[3]):
@@ -85,8 +95,8 @@ def arm_move_absolute(a0=current_arm_angle[0],a1=current_arm_angle[1],a2=current
     time.sleep(0.5)
     print('Done')
 
-def arm_move_relative(a0,a1,a2,a3):
-    current_arm_angle = [0,0,0,0]
+#ef arm_move_relative(a0=0,a1=0,a2=0,a3=0):
+#    current_arm_angle = [0,0,0,0]
 
 
 # arm_move_absolute demo on joint0
@@ -94,6 +104,7 @@ def demo_move_1():
     arm_move_absolute(a0=0)
     arm_move_absolute(a0=90)
     arm_move_absolute(a0=180)
+    get_current_angle()
     arm_move_absolute(a0=-90)
     arm_move_absolute(a0=-180)
     arm_move_absolute(a0=0)
