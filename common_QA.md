@@ -1,8 +1,5 @@
 # 安装与Demo
 
-### git与github指南
-详见：https://www.datacamp.com/community/tutorials/git-push-pull
-
 ### win10的cmd无法运行python
 主要为win10环境变量问题，有2种解决方案：
 1. 安装python3.9时勾选自动补全环境变量(environment parameters)

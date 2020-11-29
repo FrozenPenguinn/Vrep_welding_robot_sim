@@ -53,52 +53,51 @@ else:
     print('Connection not successful')
     sys.exit('Could not connect')
 
-#get handles of four wheels and vision sensor
-armJoints = [1,1,1,1] #wheel joints handle
-ret1, armJoints[0] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint0',vrep.simx_opmode_oneshot_wait)
-ret2, armJoints[1] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint1',vrep.simx_opmode_oneshot_wait)
-ret3, armJoints[2] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint2',vrep.simx_opmode_oneshot_wait)
-ret4, armJoints[3] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint3',vrep.simx_opmode_oneshot_wait)
-youBot = vrep.simxGetObjectHandle(clientID, 'youBot',vrep.simx_opmode_oneshot_wait)
-youBot = youBot[1]
-time.sleep(0.5)    #initialize the visionsensor
+# get handles of youbot and arms
+arm_joint_handle = [1,1,1,1] #wheel joints handle
+arm_joint_status = [1,1,1,1]
+arm_joint_status[0], arm_joint_handle[0] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint0',vrep.simx_opmode_oneshot_wait)
+arm_joint_status[1], arm_joint_handle[1] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint1',vrep.simx_opmode_oneshot_wait)
+arm_joint_status[2], arm_joint_handle[2] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint2',vrep.simx_opmode_oneshot_wait)
+arm_joint_status[3], arm_joint_handle[3] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint3',vrep.simx_opmode_oneshot_wait)
+youBot_status, youBot_handle = vrep.simxGetObjectHandle(clientID, 'youBot',vrep.simx_opmode_oneshot_wait)
+time.sleep(0.5)
 
-# Move armJoint
-def arm_move(a1,a2,a3,a4):
-    vrep.simxSetJointPosition(clientID,armJoints[0],a1*PI/180,vrep.simx_opmode_streaming)
-    time.sleep(0.5)
-    vrep.simxSetJointPosition(clientID,armJoints[1],a2*PI/180,vrep.simx_opmode_streaming)
-    time.sleep(0.5)
-    vrep.simxSetJointPosition(clientID,armJoints[2],a3*PI/180,vrep.simx_opmode_streaming)
-    time.sleep(0.5)
-    vrep.simxSetJointPosition(clientID,armJoints[3],a4*PI/180,vrep.simx_opmode_streaming)
+# get initial arm angle (in radians)
+current_arm_angle = [0,0,0,0]
+for i in range(0,4):
+    _, current_arm_angle[i] = vrep.simxGetJointPosition(clientID,arm_joint_handle[i],vrep.simx_opmode_blocking)
+# convert to degress
+for i in range(0,4):
+    current_arm_angle[i] = current_arm_angle[i] * 180 / PI
+# show
+for i in range(0,4):
+    print(current_arm_angle[i])
+
+# get current joint angles (toolbox function)
+
+# Move armJoint in absolute position (P system setting)
+def arm_move_absolute(a0=current_arm_angle[0],a1=current_arm_angle[1],a2=current_arm_angle[2],a3=current_arm_angle[3]):
+    vrep.simxSetJointPosition(clientID,arm_joint_handle[0],a0*PI/180,vrep.simx_opmode_streaming)
+    vrep.simxSetJointPosition(clientID,arm_joint_handle[1],a1*PI/180,vrep.simx_opmode_streaming)
+    vrep.simxSetJointPosition(clientID,arm_joint_handle[2],a2*PI/180,vrep.simx_opmode_streaming)
+    vrep.simxSetJointPosition(clientID,arm_joint_handle[3],a3*PI/180,vrep.simx_opmode_streaming)
     time.sleep(0.5)
     print('Done')
-    #simSetJointPosition(armJoints[1],90*PI/180)
-    #simSetJointPosition(armJoints[2],90*PI/180)
-    #simSetJointPosition(armJoints[3],90*PI/180)
-# def constant_arm_move(a1,a2,a3,a4):
-#     for ()
 
-# def smooth_arm_move():
+def arm_move_relative(a0,a1,a2,a3):
+    current_arm_angle = [0,0,0,0]
 
 
-t= time.time()
+# arm_move_absolute demo on joint0
+def demo_move_1():
+    arm_move_absolute(a0=0)
+    arm_move_absolute(a0=90)
+    arm_move_absolute(a0=180)
+    arm_move_absolute(a0=-90)
+    arm_move_absolute(a0=-180)
+    arm_move_absolute(a0=0)
 
-if (ret1 == 0 and ret2 == 0 and ret3 == 0 and ret4 == 0):
-    arm_move(0,0,0,0)
-    time.sleep(0.5)
-    arm_move(90,90,90,90)
-    time.sleep(0.5)
-    arm_move(0,0,0,0)
-    time.sleep(0.5)
-    arm_move(90,90,90,90)
-    time.sleep(0.5)
-    arm_move(0,0,0,0)
-    time.sleep(0.5)
-    arm_move(90,90,90,90)
-    time.sleep(0.5)
-    arm_move(0,0,0,0)
-    time.sleep(0.5)
-    arm_move(90,90,90,90)
-    # if k == 27: break  # esc pressed
+# This is main function
+if (arm_joint_status[0] == 0 and arm_joint_status[1] == 0 and arm_joint_status[2] == 0 and arm_joint_status[3] == 0):
+    demo_move_1();
