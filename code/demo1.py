@@ -1,4 +1,4 @@
-# Import Libraries:
+# import libraries:
 import vrep
 import time
 import numpy as np
@@ -10,7 +10,7 @@ from helper_functions import *
 clientID = 0
 joint_handle = np.zeros(6, dtype=np.int)
 joint_angle = np.zeros(6)
-max_torque = 1000
+max_torque = 300
 
 # connect and get handles
 clientID, joint_handle = Connect()
