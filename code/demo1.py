@@ -10,8 +10,7 @@ from helper_functions import *
 clientID = 0
 joint_handle = np.zeros(6, dtype=np.int)
 joint_angle = np.zeros(6)
-max_vel = 120
-max_torque = 20
+max_torque = 1000
 
 # connect and get handles
 clientID, joint_handle = Connect()
@@ -24,8 +23,7 @@ for i in range(6):
 
 # set max torque
 for i in range(6):
-    vrep.simxSetJointTargetVelocity(clientID,joint_handle[i],max_vel,vrep.simx_opmode_blocking)
-    #vrep.simxSetJointForce(clientID,joint_handle[i],max_torque,vrep.simx_opmode_blocking)
+    vrep.simxSetJointForce(clientID,joint_handle[i],max_torque,vrep.simx_opmode_blocking)
 
 # move joint
 def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
