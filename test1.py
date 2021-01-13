@@ -15,6 +15,7 @@ import cv2
 port = 19999    #identify port number here for socket communication with vrep ,19900-19999
 global persAngle
 persAngle = 70  # identify maximum perspective angle of vision sensor. (degree)
+PI = math.pi  # pi=3.14..., constant
 #-------------------------------------------------
 #socket communication with console. because i want to launch all the cars simultaneously
 '''
@@ -44,7 +45,6 @@ client_sk.close()
 
 # following is initializing:
 # initialize communition with VREP
-PI = math.pi  # pi=3.14..., constant
 vrep.simxFinish(-1)  # just in case, close all opened connections
 clientID = vrep.simxStart('127.0.0.1', port, True, True, 5000, 5)
 if clientID != -1:  # check if client connection successful
@@ -56,12 +56,11 @@ else:
 # get handles of youbot and arms
 arm_joint_handle = [1,1,1,1] #wheel joints handle
 arm_joint_status = [1,1,1,1]
-arm_joint_status[0], arm_joint_handle[0] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint0',vrep.simx_opmode_oneshot_wait)
-arm_joint_status[1], arm_joint_handle[1] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint1',vrep.simx_opmode_oneshot_wait)
-arm_joint_status[2], arm_joint_handle[2] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint2',vrep.simx_opmode_oneshot_wait)
-arm_joint_status[3], arm_joint_handle[3] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint3',vrep.simx_opmode_oneshot_wait)
-youBot_status, youBot_handle = vrep.simxGetObjectHandle(clientID, 'youBot',vrep.simx_opmode_oneshot_wait)
-time.sleep(0.5)
+arm_joint_status[0], arm_joint_handle[0] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint0',vrep.simx_opmode_blocking)
+arm_joint_status[1], arm_joint_handle[1] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint1',vrep.simx_opmode_blocking)
+arm_joint_status[2], arm_joint_handle[2] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint2',vrep.simx_opmode_blocking)
+arm_joint_status[3], arm_joint_handle[3] = vrep.simxGetObjectHandle(clientID, 'youBotArmJoint3',vrep.simx_opmode_blocking)
+youBot_status, youBot_handle = vrep.simxGetObjectHandle(clientID, 'youBot',vrep.simx_opmode_blocking)
 
 # initialize joint angle
 current_arm_angle = [0,0,0,0]
@@ -95,7 +94,7 @@ def arm_move_absolute(a0=current_arm_angle[0],a1=current_arm_angle[1],a2=current
     time.sleep(0.5)
     print('Done')
 
-#ef arm_move_relative(a0=0,a1=0,a2=0,a3=0):
+#def arm_move_relative(a0=0,a1=0,a2=0,a3=0):
 #    current_arm_angle = [0,0,0,0]
 
 
