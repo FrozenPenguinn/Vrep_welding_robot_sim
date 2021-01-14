@@ -1,3 +1,4 @@
+import vrep
 import math
 import numpy as np
 
@@ -15,3 +16,5 @@ def T_mat(theta,d,a,alpha):
                      [0              ,  math.sin(alpha)                ,  math.cos(alpha)                ,  d                ],
                      [0              ,  0                              ,  0                              ,  1                ]])
     return mat
+
+def Arr2mat(arr):

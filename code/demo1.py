@@ -19,7 +19,6 @@ clientID, joint_handle = Connect()
 for i in range(6):
     _, joint_angle[i] = vrep.simxGetJointPosition(clientID,joint_handle[i],vrep.simx_opmode_blocking)
     joint_angle[i] = Deg2rad(joint_angle[i])
-    print(joint_angle[i])
 
 # set max torque
 for i in range(6):
@@ -39,7 +38,7 @@ def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
 Move_to_joint_position(90,90,-90,90,90,90)
 Move_to_joint_position(-90,45,90,135,90,90)
 Move_to_joint_position(0,0,0,0,0,0)
-print('Done')
+print('Done1')
 
 # stop simulation and close connections
 Disconnect(clientID)
