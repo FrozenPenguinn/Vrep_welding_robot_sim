@@ -82,19 +82,20 @@ def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
     vrep.simxSetJointTargetPosition(clientID,joint_handle[5],Deg2rad(a5),vrep.simx_opmode_oneshot)
     time.sleep(2)
 
-def Get_object_pos_ori_mat(clientID,end_effector_handle):
-    print("Experimental result: ")
-    Move_to_joint_position(a0,a1,a2,a3,a4,a5)
-    _,end_pos = vrep.simxGetObjectPosition(clientID,joint_handle[5],vrep.simx_opmode_blocking)
-    _,pos_or_mat = vrep.simxGetJointMatrix(clientID,joint_handle[5],vrep.simx_opmode_blocking)
-    matrix = np.array(pos_or_mat).reshape((3,4))
-    print(matrix)
+def Get_object_pos_ori_mat():
+    _,end_pos = vrep.simxGetObjectPosition(clientID,end_effector_handle,-1,vrep.simx_opmode_blocking)
+    _,end_ori = vrep.simxGetObjectOrientation(clientID,end_effector_handle,-1,vrep.simx_opmode_blocking)
+    print('position in meters: ')
+    print(end_pos)
+    print('orientation in radians: ')
+    print(end_ori)
 
 # verify
-Forward_kinematics(0,0,0,0,0,0)
+#Forward_kinematics(0,0,0,0,0,0)
 #Exp_veri(0,0,0,0,0,0)
-print(vrep.simxGetObjectPosition(clientID,end_effector_handle,-1,vrep.simx_opmode_blocking))
-print(vrep.simxGetObjectOrientation(clientID,end_effector_handle,-1,vrep.simx_opmode_blocking))
+Get_object_pos_ori_mat()
+Move_to_joint_position(-90,45,90,135,90,90)
+Get_object_pos_ori_mat()
 
 time.sleep(1)
 
