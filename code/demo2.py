@@ -6,7 +6,6 @@ import numpy.matlib
 import math
 from connection import *
 from helper_functions import *
-#from demo1 import Move_to_joint_position
 
 # initialize
 clientID = 0
@@ -34,7 +33,9 @@ def show_dummy(T):
     rotation_mat = T[0:3,0:3]
     translation_mat = T[0:3,3]
     # matrix to euler
-    euler = rot2euler(rotation_mat)
+    euler = rotm2euler(T)
+    print("euler: ")
+    print(euler)
     # get dummy handle
     status, dummy_handle = vrep.simxGetObjectHandle(clientID, 'Dummy', vrep.simx_opmode_blocking)
     if status!= vrep.simx_return_ok:
@@ -64,11 +65,11 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     # combine
     T = T01*T12*T23*T34*T45*T56*T6t
     # cut
-    T = T[0:3]
-    show_dummy(T)
+    T_reduced = T[0:3]
+    show_dummy(T_reduced)
     # print
     print("Theoretical result: ")
-    print(T[0:3])
+    print(T)
     # return
     return T
 
@@ -91,13 +92,15 @@ def Get_object_pos_ori_mat():
     print(end_ori)
 
 # verify
-#Forward_kinematics(0,0,0,0,0,0)
-#Exp_veri(0,0,0,0,0,0)
-Get_object_pos_ori_mat()
-Move_to_joint_position(-90,45,90,135,90,90)
+Forward_kinematics(0,0,0,0,0,0)
+print('gripper pos and ori')
 Get_object_pos_ori_mat()
 
 time.sleep(1)
+
+print("testing: ")
+matrix = np.matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
+print(rotm2euler(matrix))
 
 print('Done2')
 
