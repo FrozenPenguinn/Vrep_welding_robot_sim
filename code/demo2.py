@@ -14,9 +14,15 @@ joint_handle = np.zeros(6, dtype=np.int)
 joint_angle = np.zeros(6)
 pos_or_mat = np.zeros(12)
 euler = np.zeros(3)
+max_torque = 200
+tool_length = -0.1173925
 
 # connect and get handles
-clientID, joint_handle = Connect()
+clientID, joint_handle, end_effector_handle = Connect()
+
+# set max torque
+for i in range(6):
+    vrep.simxSetJointForce(clientID,joint_handle[i],max_torque,vrep.simx_opmode_blocking)
 
 # initialize UR5 parameters
 d = np.array([0.0892,0,0,0.10915,0.09465,0.0823])
@@ -54,8 +60,9 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     T34 = T_mat(theta[3],d[3],a[3],alpha[3])
     T45 = T_mat(theta[4],d[4],a[4],alpha[4])
     T56 = T_mat(theta[5],d[5],a[5],alpha[5])
+    T6t = T_mat(0,0,tool_length,0)
     # combine
-    T = T01*T12*T23*T34*T45*T56
+    T = T01*T12*T23*T34*T45*T56*T6t
     # cut
     T = T[0:3]
     show_dummy(T)
@@ -75,25 +82,20 @@ def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
     vrep.simxSetJointTargetPosition(clientID,joint_handle[5],Deg2rad(a5),vrep.simx_opmode_oneshot)
     time.sleep(2)
 
-def Exp_veri(a0,a1,a2,a3,a4,a5):
+def Get_object_pos_ori_mat(clientID,end_effector_handle):
     print("Experimental result: ")
     Move_to_joint_position(a0,a1,a2,a3,a4,a5)
+    _,end_pos = vrep.simxGetObjectPosition(clientID,joint_handle[5],vrep.simx_opmode_blocking)
     _,pos_or_mat = vrep.simxGetJointMatrix(clientID,joint_handle[5],vrep.simx_opmode_blocking)
     matrix = np.array(pos_or_mat).reshape((3,4))
     print(matrix)
 
 # verify
-Forward_kinematics(-90,45,90,135,90,90)
-Exp_veri(-90,45,90,135,90,90)
-time.sleep(1)
+Forward_kinematics(0,0,0,0,0,0)
+#Exp_veri(0,0,0,0,0,0)
+print(vrep.simxGetObjectPosition(clientID,end_effector_handle,-1,vrep.simx_opmode_blocking))
+print(vrep.simxGetObjectOrientation(clientID,end_effector_handle,-1,vrep.simx_opmode_blocking))
 
-Move_to_joint_position(0,0,0,0,0,90)
-time.sleep(1)
-Move_to_joint_position(0,0,0,0,0,-90)
-time.sleep(1)
-Move_to_joint_position(0,0,0,0,0,90)
-time.sleep(1)
-Move_to_joint_position(0,0,0,0,0,-90)
 time.sleep(1)
 
 print('Done2')

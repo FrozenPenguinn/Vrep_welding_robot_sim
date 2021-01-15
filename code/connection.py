@@ -41,6 +41,10 @@ def Connect():
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of sixth joint")
 
+    status, end_effector_handle = vrep.simxGetObjectHandle(clientID, 'End_effector', vrep.simx_opmode_blocking)
+    if status!= vrep.simx_return_ok:
+    	raise Exception('Cannot get handle of end effector')
+
     # wrapping
     joint_handles = np.zeros(6, dtype=np.int)
     joint_handles[0] = joint1_handle
@@ -51,7 +55,7 @@ def Connect():
     joint_handles[5] = joint6_handle
 
     # return
-    return clientID, joint_handles
+    return clientID, joint_handles, end_effector_handle
 
 def Disconnect(clientID):
     vrep.simxStopSimulation(clientID, vrep.simx_opmode_oneshot)

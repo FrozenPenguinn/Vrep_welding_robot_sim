@@ -11,7 +11,6 @@ def Rad2deg(rad):
     return rad * 180 / PI
 
 def rot2euler(rotation_mat):
-    print('mdzz')
     if rotation_mat[0,2] < 1:
         if rotation_mat[0,2] > -1:
             beta = np.arcsin(rotation_mat[0,2])

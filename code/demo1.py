@@ -10,10 +10,10 @@ from helper_functions import *
 clientID = 0
 joint_handle = np.zeros(6, dtype=np.int)
 joint_angle = np.zeros(6)
-max_torque = 300
+max_torque = 200
 
 # connect and get handles
-clientID, joint_handle = Connect()
+clientID, joint_handle-, _ = Connect()
 
 # get initial arm angle
 for i in range(6):
