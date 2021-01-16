@@ -16,6 +16,10 @@ euler = np.zeros(3)
 max_torque = 200
 tool_length = -0.1173925
 
+'''
+重点：在vrep中的xy轴与标准DH模型中相反！！！
+'''
+
 # connect and get handles
 clientID, joint_handle, end_effector_handle = Connect()
 
@@ -23,19 +27,19 @@ clientID, joint_handle, end_effector_handle = Connect()
 for i in range(6):
     vrep.simxSetJointForce(clientID,joint_handle[i],max_torque,vrep.simx_opmode_blocking)
 
-# initialize UR5 parameters
-d = np.array([0.0892,0,0,0.10915,0.09465,0.0823])
-a = np.array([0,-0.425,-0.39225,0,0,0])
+# initialize UR5 parameters (old)
+d = np.array([89.159,0,0,109.15,94.65,82.3])
+a = np.array([0,-425,-392.25,0,0,0])
 alpha = np.array([PI/2,0,0,PI/2,-PI/2,0])
 
 def show_dummy(T):
     # Extract rotation and translation
     rotation_mat = T[0:3,0:3]
     translation_mat = T[0:3,3]
+    print('translation_mat: ')
+    print(translation_mat)
     # matrix to euler
     euler = rotm2euler(T)
-    print("euler: ")
-    print(euler)
     # get dummy handle
     status, dummy_handle = vrep.simxGetObjectHandle(clientID, 'Dummy', vrep.simx_opmode_blocking)
     if status!= vrep.simx_return_ok:
@@ -54,6 +58,7 @@ def show_dummy(T):
 def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     # convert from deg to rad and wrap
     theta = np.array([Deg2rad(deg1),Deg2rad(deg2),Deg2rad(deg3),Deg2rad(deg4),Deg2rad(deg5),Deg2rad(deg6)])
+    #theta = np.array([1,1,1,1,1,1])
     # calculate respective transformation matrix
     T01 = T_mat(theta[0],d[0],a[0],alpha[0])
     T12 = T_mat(theta[1],d[1],a[1],alpha[1])
@@ -61,15 +66,48 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     T34 = T_mat(theta[3],d[3],a[3],alpha[3])
     T45 = T_mat(theta[4],d[4],a[4],alpha[4])
     T56 = T_mat(theta[5],d[5],a[5],alpha[5])
-    T6t = T_mat(0,0,tool_length,0)
+    T6t = T_mat(0,tool_length,0,0)
     # combine
     T = T01*T12*T23*T34*T45*T56*T6t
     # cut
     T_reduced = T[0:3]
+    '''
+    print('T_reduced: ')
+    print(T_reduced)
+    print('T1= ')
+    print(T01)
+    print(rotm2euler(T01))
+    print('T2= ')
+    print(T12)
+    print(rotm2euler(T12))
+    print('T3:')
+    print(T23)
+    print(rotm2euler(T23))
+    print('T4:')
+    print(T34)
+    print(rotm2euler(T34))
+    print('T5:')
+    print(T45)
+    print(rotm2euler(T45))
+    print('T6:')
+    print(T56)
+    print(rotm2euler(T56))
+    print('Tt:')
+    print(T6t)
+    print(rotm2euler(T6t))
+    '''
+    '''
+    # swtich xy axis
+    T_reduced[1,0],T_reduced[2,0] = T_reduced[2,0],T_reduced[1,0]
+    T_reduced[1,1],T_reduced[2,1] = T_reduced[2,1],T_reduced[1,1]
+    T_reduced[1,2],T_reduced[2,2] = T_reduced[2,2],T_reduced[1,2]
+    '''
     show_dummy(T_reduced)
     # print
     print("Theoretical result: ")
     print(T)
+    print('euler of T: ')
+    print(rotm2euler(T_reduced))
     # return
     return T
 
@@ -92,16 +130,17 @@ def Get_object_pos_ori_mat():
     print(end_ori)
 
 # verify
+Move_to_joint_position(0,0,0,0,0,0)
 Forward_kinematics(0,0,0,0,0,0)
 print('gripper pos and ori')
 Get_object_pos_ori_mat()
-
+'''
 time.sleep(1)
-
 print("testing: ")
-matrix = np.matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
+matrix = np.matrix([[1,0,0,0],[0,0,-1,0],[0,1,0,0],[0,0,0,1]])
+print(matrix)
 print(rotm2euler(matrix))
-
+'''
 print('Done2')
 
 # stop simulation and close connections

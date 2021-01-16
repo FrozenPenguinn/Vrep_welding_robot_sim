@@ -13,7 +13,7 @@ joint_angle = np.zeros(6)
 max_torque = 200
 
 # connect and get handles
-clientID, joint_handle-, _ = Connect()
+clientID, joint_handle, _ = Connect()
 
 # get initial arm angle
 for i in range(6):

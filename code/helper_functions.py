@@ -28,6 +28,7 @@ def rot2euler(rotation_mat):
     euler = np.array([alpha,beta,garma])
     return euler
 
+# original
 def T_mat(theta,d,a,alpha):
     mat = np.matrix([[math.cos(theta), -math.sin(theta)*math.cos(alpha),  math.sin(theta)*math.sin(alpha),  a*math.cos(theta)],
                      [math.sin(theta),  math.cos(theta)*math.cos(alpha), -math.cos(theta)*math.sin(alpha),  a*math.sin(theta)],
@@ -39,16 +40,18 @@ def T_mat(theta,d,a,alpha):
 # reference
 def rotm2euler(R) :
 
-    sy = math.sqrt(R[0,0] * R[0,0] +  R[1,0] * R[1,0])
-    singular = sy < 1e-6
+    if R[0,2] < 1:
+        if R[0,2] > -1:
+            b = np.arcsin(R[0,2])
+            a = np.arctan2(-R[1,2],R[2,2])
+            g = np.arctan2(-R[0,1],R[0,0])
+        else:
+            b = -PI/2
+            a = np.arctan2(R[1,0],R[1,1])
+            g = 0
+    else:
+        b = PI/2
+        a = np.arctan2(R[1,0],R[1,1])
+        g = 0
 
-    if  not singular :
-        x = math.atan2(R[2,1] , R[2,2])
-        y = math.atan2(-R[2,0], sy)
-        z = math.atan2(R[1,0], R[0,0])
-    else :
-        x = math.atan2(-R[1,2], R[1,1])
-        y = math.atan2(-R[2,0], sy)
-        z = 0
-
-    return np.array([x, y, z])
+    return np.array([a, b, g])
