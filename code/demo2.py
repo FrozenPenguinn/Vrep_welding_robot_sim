@@ -16,10 +16,6 @@ euler = np.zeros(3)
 max_torque = 200
 tool_length = -0.1173925
 
-'''
-重点：在vrep中的xy轴与标准DH模型中相反！！！
-'''
-
 # connect and get handles
 clientID, joint_handle, end_effector_handle = Connect()
 
@@ -28,8 +24,8 @@ for i in range(6):
     vrep.simxSetJointForce(clientID,joint_handle[i],max_torque,vrep.simx_opmode_blocking)
 
 # initialize UR5 parameters (old)
-d = np.array([89.159,0,0,109.15,94.65,82.3])
-a = np.array([0,-425,-392.25,0,0,0])
+d = np.array([0.1273,0,0,0.163941,0.1157,0.0922])
+a = np.array([0,-0.612,-0.5723,0,0,0])
 alpha = np.array([PI/2,0,0,PI/2,-PI/2,0])
 
 def show_dummy(T):
@@ -130,7 +126,7 @@ def Get_object_pos_ori_mat():
     print(end_ori)
 
 # verify
-Move_to_joint_position(0,0,0,0,0,0)
+Move_to_joint_position(90,0,0,0,0,0)
 Forward_kinematics(0,0,0,0,0,0)
 print('gripper pos and ori')
 Get_object_pos_ori_mat()
@@ -144,4 +140,4 @@ print(rotm2euler(matrix))
 print('Done2')
 
 # stop simulation and close connections
-Disconnect(clientID)
+#Disconnect(clientID)

@@ -30,10 +30,10 @@ def rot2euler(rotation_mat):
 
 # original
 def T_mat(theta,d,a,alpha):
-    mat = np.matrix([[math.cos(theta), -math.sin(theta)*math.cos(alpha),  math.sin(theta)*math.sin(alpha),  a*math.cos(theta)],
-                     [math.sin(theta),  math.cos(theta)*math.cos(alpha), -math.cos(theta)*math.sin(alpha),  a*math.sin(theta)],
-                     [0              ,  math.sin(alpha)                ,  math.cos(alpha)                ,  d                ],
-                     [0              ,  0                              ,  0                              ,  1                ]])
+    mat = np.matrix([[math.cos(theta), -math.sin(theta)*math.cos(alpha),  math.sin(theta)*math.sin(alpha),   a*math.cos(alpha)],
+                     [math.sin(theta),  math.cos(theta)*math.cos(alpha), -math.cos(alpha)*math.sin(alpha),   a*math.sin(alpha)],
+                     [0              ,  math.sin(alpha)                ,  math.cos(alpha)                ,   d                ],
+                     [0              ,  0                              ,  0                              ,   1                ]])
     return mat
 
 #def Arr2mat(arr):

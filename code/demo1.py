@@ -13,7 +13,7 @@ joint_angle = np.zeros(6)
 max_torque = 200
 
 # connect and get handles
-clientID, joint_handle, _ = Connect()
+clientID, joint_handle = Connect()
 
 # get initial arm angle
 for i in range(6):
@@ -32,12 +32,14 @@ def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
     vrep.simxSetJointTargetPosition(clientID,joint_handle[3],Deg2rad(a3),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handle[4],Deg2rad(a4),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handle[5],Deg2rad(a5),vrep.simx_opmode_oneshot)
-    time.sleep(1)
 
 # This is main function
-Move_to_joint_position(90,90,-90,90,90,90)
-Move_to_joint_position(-90,45,90,135,90,90)
-Move_to_joint_position(0,0,0,0,0,0)
+Move_to_joint_position(90,90,90,90,90,90)
+time.sleep(3)
+Move_to_joint_position(90,135,225,180,180,350)
+time.sleep(5)
+Move_to_joint_position(180,180,180,180,180,180)
+time.sleep(3)
 print('Done1')
 
 # stop simulation and close connections
