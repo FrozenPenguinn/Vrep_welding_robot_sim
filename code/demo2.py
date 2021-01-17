@@ -23,10 +23,19 @@ clientID, joint_handle, end_effector_handle = Connect()
 for i in range(6):
     vrep.simxSetJointForce(clientID,joint_handle[i],max_torque,vrep.simx_opmode_blocking)
 
-# initialize UR5 parameters (old)
-d = np.array([0.1273,0,0,0.163941,0.1157,0.0922])
-a = np.array([0,-0.612,-0.5723,0,0,0])
-alpha = np.array([PI/2,0,0,PI/2,-PI/2,0])
+# initialize Jaco parameters (old)
+Di = np.array([0.2755,0.4100,0.2073,0.0743,0.0743,0.1687])
+aa = (11.0*PI)/72.0
+ca = math.cos(aa)
+sa = math.sin(aa)
+c2a = math.cos(2*aa)
+s2a = math.sin(2*aa)
+d4b = Di[2] + Di[3]*sa/s2a
+d5b = Di[3]*sa/s2a + Di[4]*sa/s2a
+d6b = Di[4]*sa/s2a + Di[5]
+d = np.array([Di[0],0,-e2,-d4b,-d5b,-d6b7])
+a = np.array([0,0.41,0,0,0,0])
+alpha = np.array([PI/2,PI,PI/2,2*aa,2*aa,PI])
 
 def show_dummy(T):
     # Extract rotation and translation
