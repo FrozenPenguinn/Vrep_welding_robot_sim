@@ -14,7 +14,7 @@ joint_angle = np.zeros(6)
 pos_or_mat = np.zeros(12)
 euler = np.zeros(3)
 max_torque = 200
-tool_length = -0.1173925
+tool_length = -0.1
 
 # connect and get handles
 clientID, joint_handle, end_effector_handle = Connect()
@@ -23,8 +23,9 @@ clientID, joint_handle, end_effector_handle = Connect()
 for i in range(6):
     vrep.simxSetJointForce(clientID,joint_handle[i],max_torque,vrep.simx_opmode_blocking)
 
-# initialize Jaco parameters (old)
+# initialize Jaco parameters
 Di = np.array([0.2755,0.4100,0.2073,0.0743,0.0743,0.1687])
+e2 = 0.0098
 aa = (11.0*PI)/72.0
 ca = math.cos(aa)
 sa = math.sin(aa)
@@ -33,36 +34,14 @@ s2a = math.sin(2*aa)
 d4b = Di[2] + Di[3]*sa/s2a
 d5b = Di[3]*sa/s2a + Di[4]*sa/s2a
 d6b = Di[4]*sa/s2a + Di[5]
-d = np.array([Di[0],0,-e2,-d4b,-d5b,-d6b7])
-a = np.array([0,0.41,0,0,0,0])
+d = np.array([Di[0],0,-e2,-d4b,-d5b,-d6b])
+a = np.array([0,Di[1],0,0,0,0])
 alpha = np.array([PI/2,PI,PI/2,2*aa,2*aa,PI])
-
-def show_dummy(T):
-    # Extract rotation and translation
-    rotation_mat = T[0:3,0:3]
-    translation_mat = T[0:3,3]
-    print('translation_mat: ')
-    print(translation_mat)
-    # matrix to euler
-    euler = rotm2euler(T)
-    # get dummy handle
-    status, dummy_handle = vrep.simxGetObjectHandle(clientID, 'Dummy', vrep.simx_opmode_blocking)
-    if status!= vrep.simx_return_ok:
-    	raise Exception('Cannot get handle of dummy')
-    time.sleep(1)
-    # create dummy
-    status = vrep.simxSetObjectPosition(clientID,dummy_handle,-1,translation_mat,vrep.simx_opmode_blocking)
-    if status != vrep.simx_return_ok:
-    	raise Exception('Cannot get position of dummy')
-    status = vrep.simxSetObjectOrientation(clientID,dummy_handle,-1,euler,vrep.simx_opmode_blocking)
-    if status != vrep.simx_return_ok:
-    	raise Exception('Cannot get orientation of dummy')
-    time.sleep(1)
 
 # theoretical result
 def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     # convert from deg to rad and wrap
-    theta = np.array([Deg2rad(deg1),Deg2rad(deg2),Deg2rad(deg3),Deg2rad(deg4),Deg2rad(deg5),Deg2rad(deg6)])
+    theta = np.array([Deg2rad(-deg1),Deg2rad(deg2-90),Deg2rad(deg3+90),Deg2rad(deg4),Deg2rad(deg5-180),Deg2rad(deg6+100)])
     #theta = np.array([1,1,1,1,1,1])
     # calculate respective transformation matrix
     T01 = T_mat(theta[0],d[0],a[0],alpha[0])
@@ -76,7 +55,6 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     T = T01*T12*T23*T34*T45*T56*T6t
     # cut
     T_reduced = T[0:3]
-    '''
     print('T_reduced: ')
     print(T_reduced)
     print('T1= ')
@@ -101,7 +79,6 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     print(T6t)
     print(rotm2euler(T6t))
     '''
-    '''
     # swtich xy axis
     T_reduced[1,0],T_reduced[2,0] = T_reduced[2,0],T_reduced[1,0]
     T_reduced[1,1],T_reduced[2,1] = T_reduced[2,1],T_reduced[1,1]
@@ -115,6 +92,28 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     print(rotm2euler(T_reduced))
     # return
     return T
+
+def show_dummy(T):
+    # Extract rotation and translation
+    rotation_mat = T[0:3,0:3]
+    translation_mat = T[0:3,3]
+    print('translation_mat: ')
+    print(translation_mat)
+    # matrix to euler
+    euler = rotm2euler(T)
+    # get dummy handle
+    status, dummy_handle = vrep.simxGetObjectHandle(clientID, 'Dummy', vrep.simx_opmode_blocking)
+    if status!= vrep.simx_return_ok:
+    	raise Exception('Cannot get handle of dummy')
+    time.sleep(1)
+    # create dummy
+    status = vrep.simxSetObjectPosition(clientID,dummy_handle,-1,translation_mat,vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+    	raise Exception('Cannot get position of dummy')
+    status = vrep.simxSetObjectOrientation(clientID,dummy_handle,-1,euler,vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+    	raise Exception('Cannot get orientation of dummy')
+    time.sleep(1)
 
 # experimental vritification
 def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
@@ -135,8 +134,8 @@ def Get_object_pos_ori_mat():
     print(end_ori)
 
 # verify
-Move_to_joint_position(90,0,0,0,0,0)
-Forward_kinematics(0,0,0,0,0,0)
+Move_to_joint_position(180, 180, 180, 180, 180, 180)
+Forward_kinematics(180, 180, 180, 180, 180, 180)
 print('gripper pos and ori')
 Get_object_pos_ori_mat()
 '''
