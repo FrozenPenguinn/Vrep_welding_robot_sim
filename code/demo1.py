@@ -29,9 +29,9 @@ def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
     vrep.simxSetJointTargetPosition(clientID,joint_handle[5],Deg2rad(a5),vrep.simx_opmode_oneshot)
 
 # This is main function
-Move_to_joint_position(90,90,-90,90,90,90)
+Move_to_joint_position(0,0,0,90,0,0)
 time.sleep(1)
-Move_to_joint_position(-90,45,90,135,90,90)
+Move_to_joint_position(0,0,0,-90,0,0)
 time.sleep(1)
 Move_to_joint_position(0,0,0,0,0,0)
 time.sleep(1)

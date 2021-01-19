@@ -14,7 +14,7 @@ joint_angle = np.zeros(6)
 pos_or_mat = np.zeros(12)
 euler = np.zeros(3)
 max_torque = 200
-tool_length = -0.1
+tool_length = 0.15
 
 # connect and get handles
 clientID, joint_handle, end_effector_handle = Connect()
@@ -24,66 +24,26 @@ for i in range(6):
     vrep.simxSetJointForce(clientID,joint_handle[i],max_torque,vrep.simx_opmode_blocking)
 
 # initialize Jaco parameters
-Di = np.array([0.2755,0.4100,0.2073,0.0743,0.0743,0.1687])
-e2 = 0.0098
-aa = (11.0*PI)/72.0
-ca = math.cos(aa)
-sa = math.sin(aa)
-c2a = math.cos(2*aa)
-s2a = math.sin(2*aa)
-d4b = Di[2] + Di[3]*sa/s2a
-d5b = Di[3]*sa/s2a + Di[4]*sa/s2a
-d6b = Di[4]*sa/s2a + Di[5]
-d = np.array([Di[0],0,-e2,-d4b,-d5b,-d6b])
-a = np.array([0,Di[1],0,0,0,0])
-alpha = np.array([PI/2,PI,PI/2,2*aa,2*aa,PI])
+d = np.array([0.089159,0,0,0.10915,0.09465,0.0823])
+a = np.array([0,0.425,0.39225,0,0,0])
+alpha = np.array([0,-PI/2,0,0,PI/2,-PI/2])
 
 # theoretical result
 def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     # convert from deg to rad and wrap
-    theta = np.array([Deg2rad(-deg1),Deg2rad(deg2-90),Deg2rad(deg3+90),Deg2rad(deg4),Deg2rad(deg5-180),Deg2rad(deg6+100)])
-    #theta = np.array([1,1,1,1,1,1])
+    theta = np.array([Deg2rad(deg1),Deg2rad(deg2),Deg2rad(deg3),Deg2rad(deg4),Deg2rad(deg5),Deg2rad(deg6)])
     # calculate respective transformation matrix
-    T01 = T_mat(theta[0],d[0],a[0],alpha[0])
-    T12 = T_mat(theta[1],d[1],a[1],alpha[1])
-    T23 = T_mat(theta[2],d[2],a[2],alpha[2])
-    T34 = T_mat(theta[3],d[3],a[3],alpha[3])
-    T45 = T_mat(theta[4],d[4],a[4],alpha[4])
-    T56 = T_mat(theta[5],d[5],a[5],alpha[5])
-    T6t = T_mat(0,tool_length,0,0)
+    Tmat_01 = T01(theta[0])
+    Tmat_12 = T12(theta[1])
+    Tmat_23 = T23(theta[2])
+    Tmat_34 = T34(theta[3])
+    Tmat_45 = T45(theta[4])
+    Tmat_56 = T56(theta[5])
+    Tmat_6t = T6t(tool_length)
     # combine
-    T = T01*T12*T23*T34*T45*T56*T6t
+    T = Tmat_01*Tmat_12*Tmat_23*Tmat_34*Tmat_45*Tmat_56*Tmat_6t
     # cut
     T_reduced = T[0:3]
-    print('T_reduced: ')
-    print(T_reduced)
-    print('T1= ')
-    print(T01)
-    print(rotm2euler(T01))
-    print('T2= ')
-    print(T12)
-    print(rotm2euler(T12))
-    print('T3:')
-    print(T23)
-    print(rotm2euler(T23))
-    print('T4:')
-    print(T34)
-    print(rotm2euler(T34))
-    print('T5:')
-    print(T45)
-    print(rotm2euler(T45))
-    print('T6:')
-    print(T56)
-    print(rotm2euler(T56))
-    print('Tt:')
-    print(T6t)
-    print(rotm2euler(T6t))
-    '''
-    # swtich xy axis
-    T_reduced[1,0],T_reduced[2,0] = T_reduced[2,0],T_reduced[1,0]
-    T_reduced[1,1],T_reduced[2,1] = T_reduced[2,1],T_reduced[1,1]
-    T_reduced[1,2],T_reduced[2,2] = T_reduced[2,2],T_reduced[1,2]
-    '''
     show_dummy(T_reduced)
     # print
     print("Theoretical result: ")
@@ -134,18 +94,11 @@ def Get_object_pos_ori_mat():
     print(end_ori)
 
 # verify
-Move_to_joint_position(180, 180, 180, 180, 180, 180)
-Forward_kinematics(180, 180, 180, 180, 180, 180)
+Move_to_joint_position(90,30,60,-30,90,90)
+Forward_kinematics(90,30,60,-30,90,90)
 print('gripper pos and ori')
 Get_object_pos_ori_mat()
-'''
-time.sleep(1)
-print("testing: ")
-matrix = np.matrix([[1,0,0,0],[0,0,-1,0],[0,1,0,0],[0,0,0,1]])
-print(matrix)
-print(rotm2euler(matrix))
-'''
 print('Done2')
 
 # stop simulation and close connections
-#Disconnect(clientID)
+Disconnect(clientID)
