@@ -2,7 +2,6 @@
 import vrep
 import time
 import numpy as np
-import numpy.matlib
 import math
 from connection import *
 from helper_functions import *
