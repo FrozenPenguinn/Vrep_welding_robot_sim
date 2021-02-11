@@ -10,9 +10,10 @@ from helper_functions import *
 clientID, joint_handle, end_effector_handle = Connect()
 
 # initialize
-current_angles = np.zeros(6)
+current_angles = [0,0,0,0,0,0]
 goal_angles = np.zeros(6)
 dtheta = 1e-12
+tool_length = 0.13
 
 # Solving Ax=b
 def inverse_kinematics(pos_ori_mat):
@@ -21,13 +22,23 @@ def inverse_kinematics(pos_ori_mat):
     count = 0
     while (count < 10):
         count = count + 1
+        print('F1')
         for i in range(0,6):
-            current_angles[i] = vrep.simxGetJointPosition(clientID, joint_handle[i], vrep.simx_opmode_blocking)
+            _, current_angles[i] = vrep.simxGetJointPosition(clientID, joint_handle[i], vrep.simx_opmode_blocking)
+        print('F2')
+        print(current_angles[0])
+        print(type(current_angles[0]))
         current_T = Forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5])
         current_P = current_T[0:3,3]
-        current_R = rotm2euler(current_T)
-        current_PR_mat = np.stack(current_P,current_R)
+        current_R = np.asmatrix(rotm2euler(current_T))
+        print('type of current_T: '+ str(type(current_T)))
+        print('type of current_R: '+ str(type(current_R)))
+        print('F3')
+        current_R = current_R.shape(3,1)
+        current_PR_mat = np.vstack(current_P,current_R)
+        '''
         current_PR_mat = current_PR_mat.shape(6,1)
+        '''
         # goal PR_mat
         goal_P = pos_ori_mat[0:3,3]
         goal_R = rotm2euler(pos_ori_mat)
@@ -53,25 +64,36 @@ def inverse_kinematics(pos_ori_mat):
         perturbation_P4 = perturbation_T4[0:3,3]
         perturbation_P5 = perturbation_T5[0:3,3]
         perturbation_P6 = perturbation_T6[0:3,3]
+        print("perturbation_P6: "+perturbation_P6)
         perturbation_R1 = rotm2euler(perturbation_T1)
         perturbation_R2 = rotm2euler(perturbation_T2)
         perturbation_R3 = rotm2euler(perturbation_T3)
         perturbation_R4 = rotm2euler(perturbation_T4)
         perturbation_R5 = rotm2euler(perturbation_T5)
         perturbation_R6 = rotm2euler(perturbation_T6)
+        print("perturbation_R6: "+perturbation_R6)
+        perturbation_R1 = perturbation_R1.shape(3,1)
+        perturbation_R2 = perturbation_R2.shape(3,1)
+        perturbation_R3 = perturbation_R3.shape(3,1)
+        perturbation_R4 = perturbation_R4.shape(3,1)
+        perturbation_R5 = perturbation_R5.shape(3,1)
+        perturbation_R6 = perturbation_R6.shape(3,1)
+
         #  PR stack and reshape
-        perturbation_PR_mat1 = np.stack(perturbation_P1,perturbation_R1)
-        perturbation_PR_mat2 = np.stack(perturbation_P2,perturbation_R2)
-        perturbation_PR_mat3 = np.stack(perturbation_P3,perturbation_R3)
-        perturbation_PR_mat4 = np.stack(perturbation_P4,perturbation_R4)
-        perturbation_PR_mat5 = np.stack(perturbation_P5,perturbation_R5)
-        perturbation_PR_mat6 = np.stack(perturbation_P6,perturbation_R6)
+        perturbation_PR_mat1 = np.vstack(perturbation_P1,perturbation_R1)
+        perturbation_PR_mat2 = np.vstack(perturbation_P2,perturbation_R2)
+        perturbation_PR_mat3 = np.vstack(perturbation_P3,perturbation_R3)
+        perturbation_PR_mat4 = np.vstack(perturbation_P4,perturbation_R4)
+        perturbation_PR_mat5 = np.vstack(perturbation_P5,perturbation_R5)
+        perturbation_PR_mat6 = np.vstack(perturbation_P6,perturbation_R6)
+        '''
         perturbation_PR_mat1 = perturbation_PR_mat1.shape(6,1)
         perturbation_PR_mat2 = perturbation_PR_mat2.shape(6,1)
         perturbation_PR_mat3 = perturbation_PR_mat3.shape(6,1)
         perturbation_PR_mat4 = perturbation_PR_mat4.shape(6,1)
         perturbation_PR_mat5 = perturbation_PR_mat5.shape(6,1)
         perturbation_PR_mat6 = perturbation_PR_mat6.shape(6,1)
+        '''
         # Jacobian columns
         Jacobian1 = (perturbation_PR_mat1 - current_PR_mat)/dtheta
         Jacobian2 = (perturbation_PR_mat2 - current_PR_mat)/dtheta
@@ -88,6 +110,8 @@ def inverse_kinematics(pos_ori_mat):
             goal_angles[i] = current_angles[i] + rot_theta[i]
         Move_to_joint_position(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5])
         time.sleep(2)
+    if (count == 10):
+        print('loop too many times')
     return
 
 def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
@@ -130,7 +154,7 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     T = Tmat_01*Tmat_12*Tmat_23*Tmat_34*Tmat_45*Tmat_56*Tmat_6t
     # cut
     T_reduced = T[0:3]
-    show_dummy(T_reduced)
+    # show_dummy(T_reduced)
     # print
     print("Theoretical result: ")
     print(T)
