@@ -13,7 +13,7 @@ joint_angle = np.zeros(6)
 pos_or_mat = np.zeros(12)
 euler = np.zeros(3)
 max_torque = 200
-tool_length = 0.15
+tool_length = 0.13
 
 # connect and get handles
 clientID, joint_handle, end_effector_handle = Connect()
@@ -22,7 +22,7 @@ clientID, joint_handle, end_effector_handle = Connect()
 for i in range(6):
     vrep.simxSetJointForce(clientID,joint_handle[i],max_torque,vrep.simx_opmode_blocking)
 
-# initialize Jaco parameters
+# initialize UR5 parameters
 d = np.array([0.089159,0,0,0.10915,0.09465,0.0823])
 a = np.array([0,0.425,0.39225,0,0,0])
 alpha = np.array([0,-PI/2,0,0,PI/2,-PI/2])
@@ -100,4 +100,4 @@ Get_object_pos_ori_mat()
 print('Done2')
 
 # stop simulation and close connections
-Disconnect(clientID)
+# Disconnect(clientID)

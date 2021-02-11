@@ -1,3 +1,11 @@
+# toolbox content summary
+# 位姿表达转换：
+# rotm2euler()
+# euler2rotm()
+#
+
+
+
 import vrep
 import math
 import numpy as np
@@ -11,24 +19,6 @@ def Deg2rad(deg):
 
 def Rad2deg(rad):
     return rad * 180 / PI
-
-def rot2euler(rotation_mat):
-    if rotation_mat[0,2] < 1:
-        if rotation_mat[0,2] > -1:
-            beta = np.arcsin(rotation_mat[0,2])
-            alpha = np.arctan2(-rotation_mat[1,2],rotation_mat[2,2])
-            garma = np.arctan2(-rotation_mat[0,1],rotation_mat[0,0])
-        else:
-            beta = -PI/2
-            alpha = np.arctan2(rotation_mat[1,0],rotation_mat[1,1])
-            garma = 0
-    else:
-        beta = PI/2
-        alpha = np.arctan2(rotation_mat[1,0],rotation_mat[1,1])
-        garma = 0
-    # warpping
-    euler = np.array([alpha,beta,garma])
-    return euler
 
 # original
 '''
@@ -89,10 +79,10 @@ def T56(theta):
     return mat
 
 def T6t(tool_length):
-    mat = np.matrix([[1,   0,   0,   0             ],
-                     [0,   1,   0,   0             ],
-                     [0,   0,   1,   tool_length   ],
-                     [0,   0,   0,   1             ]])
+    mat = np.matrix([[1,   0,   0,   0           ],
+                     [0,   1,   0,   0           ],
+                     [0,   0,   1,   tool_length ],
+                     [0,   0,   0,   1           ]])
     return mat
 
 #def Arr2mat(arr):
@@ -114,3 +104,11 @@ def rotm2euler(R) :
         g = 0
 
     return np.array([a, b, g])
+
+def euler2rotm(a,b,g):
+
+    return
+
+def base2world():
+
+    return
