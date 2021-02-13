@@ -99,10 +99,12 @@ def inverse_kinematics(pos_ori_mat):
         #alpha = (np.dot(np.asarray(error_vector),np.asarray(JJTe)))/np.linalg.norm(np.asarray(JJTe))
         reshape_error_vector = error_vector.reshape((1,6))
         #alpha = (np.dot(reshape_error_vector,JJTe))/np.linalg.norm(JJTe)
-        alpha = 0.55
+        alpha = 0.56
         print("alpha: ")
         print(alpha)
         rot_theta = np.multiply(alpha,Jacobian_trans * error_vector)
+        print("norm of rot_theta: ")
+        print(np.linalg.norm(rot_theta))
         print("rot_theta: ")
         print(rot_theta)
         # Solve Ax=b
@@ -178,19 +180,19 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     return T
 
 # test
-Move_to_joint_position_deg(0,-30,60,60,-90,0)
+Move_to_joint_position_deg(0,0,0,0,-90,0)
 # diff xyz, same ori
-'''
 pos_ori_mat = np.matrix([[0,   1,   0,   1.2235e-01],
                          [0,   0,   1,   0.6000e-00],
                          [1,   0,   0,   6.0000e-01],
                          [0,   0,   0,   1         ]])
-'''
 # all diff
-pos_ori_mat = np.matrix([[0,   1,   0,   1.2235e-01],
+'''
+pos_ori_mat = np.matrix([[0,   1,   0,  -3.2235e-01],
                          [1,   0,   0,   0.3000e-00],
-                         [0,   0,  -1,   6.0000e-01],
+                         [0,   0,  -1,   5.0000e-01],
                          [0,   0,   0,   1         ]])
+'''
 dummy_ori = rotm2euler(pos_ori_mat)
 dummy_pos = pos_ori_mat[0:3,3]
 move_dummy(dummy_pos[0],dummy_pos[1],dummy_pos[2],dummy_ori[0],dummy_ori[1],dummy_ori[2])
@@ -200,4 +202,4 @@ inverse_kinematics(pos_ori_mat)
 print('Done3')
 
 # stop simulation and close connections
-# Disconnect(clientID)
+Disconnect(clientID)
