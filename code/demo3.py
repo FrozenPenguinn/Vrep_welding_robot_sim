@@ -178,10 +178,18 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     return T
 
 # test
-Move_to_joint_position_deg(0,0,0,0,-90,0)
-pos_ori_mat = np.matrix([[0,   1,   0,  -1.2235e-01],
+Move_to_joint_position_deg(0,-30,60,60,-90,0)
+# diff xyz, same ori
+'''
+pos_ori_mat = np.matrix([[0,   1,   0,   1.2235e-01],
                          [0,   0,   1,   0.6000e-00],
                          [1,   0,   0,   6.0000e-01],
+                         [0,   0,   0,   1         ]])
+'''
+# all diff
+pos_ori_mat = np.matrix([[0,   1,   0,   1.2235e-01],
+                         [1,   0,   0,   0.3000e-00],
+                         [0,   0,  -1,   6.0000e-01],
                          [0,   0,   0,   1         ]])
 dummy_ori = rotm2euler(pos_ori_mat)
 dummy_pos = pos_ori_mat[0:3,3]
