@@ -47,7 +47,7 @@ def inverse_kinematics(pos_ori_mat):
         print(error_vector)
         # check if error is small enough to quit
         if (np.linalg.norm(error_vector) < 0.01):
-            print("gap too small")
+            print("Arrived at goal location")
             break
         # Find Jacobian matrix
         # perturbation
@@ -99,7 +99,7 @@ def inverse_kinematics(pos_ori_mat):
         #alpha = (np.dot(np.asarray(error_vector),np.asarray(JJTe)))/np.linalg.norm(np.asarray(JJTe))
         reshape_error_vector = error_vector.reshape((1,6))
         #alpha = (np.dot(reshape_error_vector,JJTe))/np.linalg.norm(JJTe)
-        alpha = 0.6
+        alpha = 0.55
         print("alpha: ")
         print(alpha)
         rot_theta = np.multiply(alpha,Jacobian_trans * error_vector)
@@ -192,4 +192,4 @@ inverse_kinematics(pos_ori_mat)
 print('Done3')
 
 # stop simulation and close connections
-Disconnect(clientID)
+# Disconnect(clientID)
