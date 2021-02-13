@@ -12,42 +12,42 @@ clientID, joint_handle, end_effector_handle = Connect()
 # initialize
 current_angles = [0,0,0,0,0,0]
 goal_angles = np.zeros(6)
-dtheta = 1e-12
+dtheta = 0.01
 tool_length = 0.13
 
 # Solving Ax=b
 def inverse_kinematics(pos_ori_mat):
-    # Find error vector
-    # current PR_mat
     count = 0
-    while (count < 10):
+    while (count < 600):
+        # limit loop times
         count = count + 1
-        print('F1')
+        print("start count = " + str(count))
+        # Find error vector
+        # current PR_mat
         for i in range(0,6):
             _, current_angles[i] = vrep.simxGetJointPosition(clientID, joint_handle[i], vrep.simx_opmode_blocking)
-        print('F2')
-        print(current_angles[0])
-        print(type(current_angles[0]))
+            #print("current joint " + str(i+1) + " angle is " + str(current_angles[i]))
         current_T = Forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5])
         current_P = current_T[0:3,3]
         current_R = np.asmatrix(rotm2euler(current_T))
-        print('type of current_T: '+ str(type(current_T)))
-        print('type of current_R: '+ str(type(current_R)))
-        print('F3')
-        current_R = current_R.shape(3,1)
-        current_PR_mat = np.vstack(current_P,current_R)
-        '''
-        current_PR_mat = current_PR_mat.shape(6,1)
-        '''
+        current_R = current_R.reshape((3,1))
+        current_PR_mat = np.vstack((current_P,current_R))
+        #print("current_PR_mat : ")
+        #print(current_PR_mat)
         # goal PR_mat
         goal_P = pos_ori_mat[0:3,3]
-        goal_R = rotm2euler(pos_ori_mat)
-        goal_PR_mat = np.stack(goal_P,goal_R)
-        goal_PR_mat = goal_PR_mat.shape(6,1)
+        goal_R = np.asmatrix(rotm2euler(pos_ori_mat))
+        goal_R = goal_R.reshape((3,1))
+        goal_PR_mat = np.vstack((goal_P,goal_R))
+        #print("goal_PR_mat : ")
+        #print(goal_PR_mat)
         # error vector
         error_vector = goal_PR_mat - current_PR_mat
+        print("error vector : ")
+        print(error_vector)
         # check if error is small enough to quit
         if (np.linalg.norm(error_vector) < 0.01):
+            print("gap too small")
             break
         # Find Jacobian matrix
         # perturbation
@@ -64,63 +64,76 @@ def inverse_kinematics(pos_ori_mat):
         perturbation_P4 = perturbation_T4[0:3,3]
         perturbation_P5 = perturbation_T5[0:3,3]
         perturbation_P6 = perturbation_T6[0:3,3]
-        print("perturbation_P6: "+perturbation_P6)
-        perturbation_R1 = rotm2euler(perturbation_T1)
-        perturbation_R2 = rotm2euler(perturbation_T2)
-        perturbation_R3 = rotm2euler(perturbation_T3)
-        perturbation_R4 = rotm2euler(perturbation_T4)
-        perturbation_R5 = rotm2euler(perturbation_T5)
-        perturbation_R6 = rotm2euler(perturbation_T6)
-        print("perturbation_R6: "+perturbation_R6)
-        perturbation_R1 = perturbation_R1.shape(3,1)
-        perturbation_R2 = perturbation_R2.shape(3,1)
-        perturbation_R3 = perturbation_R3.shape(3,1)
-        perturbation_R4 = perturbation_R4.shape(3,1)
-        perturbation_R5 = perturbation_R5.shape(3,1)
-        perturbation_R6 = perturbation_R6.shape(3,1)
-
+        #print("perturbation_P6: "+str(perturbation_P6))
+        perturbation_R1 = np.asmatrix(rotm2euler(perturbation_T1)).reshape((3,1))
+        perturbation_R2 = np.asmatrix(rotm2euler(perturbation_T2)).reshape((3,1))
+        perturbation_R3 = np.asmatrix(rotm2euler(perturbation_T3)).reshape((3,1))
+        perturbation_R4 = np.asmatrix(rotm2euler(perturbation_T4)).reshape((3,1))
+        perturbation_R5 = np.asmatrix(rotm2euler(perturbation_T5)).reshape((3,1))
+        perturbation_R6 = np.asmatrix(rotm2euler(perturbation_T6)).reshape((3,1))
+        #print("perturbation_R6: "+str(perturbation_R6))
         #  PR stack and reshape
-        perturbation_PR_mat1 = np.vstack(perturbation_P1,perturbation_R1)
-        perturbation_PR_mat2 = np.vstack(perturbation_P2,perturbation_R2)
-        perturbation_PR_mat3 = np.vstack(perturbation_P3,perturbation_R3)
-        perturbation_PR_mat4 = np.vstack(perturbation_P4,perturbation_R4)
-        perturbation_PR_mat5 = np.vstack(perturbation_P5,perturbation_R5)
-        perturbation_PR_mat6 = np.vstack(perturbation_P6,perturbation_R6)
-        '''
-        perturbation_PR_mat1 = perturbation_PR_mat1.shape(6,1)
-        perturbation_PR_mat2 = perturbation_PR_mat2.shape(6,1)
-        perturbation_PR_mat3 = perturbation_PR_mat3.shape(6,1)
-        perturbation_PR_mat4 = perturbation_PR_mat4.shape(6,1)
-        perturbation_PR_mat5 = perturbation_PR_mat5.shape(6,1)
-        perturbation_PR_mat6 = perturbation_PR_mat6.shape(6,1)
-        '''
+        perturbation_PR_mat1 = np.vstack((perturbation_P1,perturbation_R1))
+        perturbation_PR_mat2 = np.vstack((perturbation_P2,perturbation_R2))
+        perturbation_PR_mat3 = np.vstack((perturbation_P3,perturbation_R3))
+        perturbation_PR_mat4 = np.vstack((perturbation_P4,perturbation_R4))
+        perturbation_PR_mat5 = np.vstack((perturbation_P5,perturbation_R5))
+        perturbation_PR_mat6 = np.vstack((perturbation_P6,perturbation_R6))
         # Jacobian columns
         Jacobian1 = (perturbation_PR_mat1 - current_PR_mat)/dtheta
         Jacobian2 = (perturbation_PR_mat2 - current_PR_mat)/dtheta
+        #print("Jaco2: ")
+        #print(Jacobian2)
         Jacobian3 = (perturbation_PR_mat3 - current_PR_mat)/dtheta
         Jacobian4 = (perturbation_PR_mat4 - current_PR_mat)/dtheta
         Jacobian5 = (perturbation_PR_mat5 - current_PR_mat)/dtheta
         Jacobian6 = (perturbation_PR_mat6 - current_PR_mat)/dtheta
         # Jacobian matrix
         Jacobian = np.hstack((Jacobian1,Jacobian2,Jacobian3,Jacobian4,Jacobian5,Jacobian6))
+        print("Jacobian matrix: ")
+        print(Jacobian)
+        # calculuate rot_theta with Jacobian transpose method
+        # 应该尝试把位置调整留给大3轴，姿态调整留给小3轴
+        Jacobian_trans = Jacobian.transpose()
+        JJTe = Jacobian * Jacobian_trans * error_vector
+        #alpha = (np.dot(np.asarray(error_vector),np.asarray(JJTe)))/np.linalg.norm(np.asarray(JJTe))
+        reshape_error_vector = error_vector.reshape((1,6))
+        #alpha = (np.dot(reshape_error_vector,JJTe))/np.linalg.norm(JJTe)
+        alpha = 0.6
+        print("alpha: ")
+        print(alpha)
+        rot_theta = np.multiply(alpha,Jacobian_trans * error_vector)
+        print("rot_theta: ")
+        print(rot_theta)
         # Solve Ax=b
-        rot_theta = np.linalg.solve(Jacobian, error_vector)
+        #rot_theta = np.linalg.solve(Jacobian, error_vector)
         # update goal_angles
         for i in range(0,6):
             goal_angles[i] = current_angles[i] + rot_theta[i]
-        Move_to_joint_position(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5])
-        time.sleep(2)
+        Move_to_joint_position_rad(goal_angles[0],goal_angles[1],goal_angles[2],goal_angles[3],goal_angles[4],goal_angles[5])
+        #print("goal_angle:")
+        #print(goal_angles)
+        #time.sleep(0.01)
+        print("end count = " + str(count))
     if (count == 10):
         print('loop too many times')
     return
 
-def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
+def Move_to_joint_position_deg(a0,a1,a2,a3,a4,a5):
     vrep.simxSetJointTargetPosition(clientID,joint_handle[0],Deg2rad(a0),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handle[1],Deg2rad(a1),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handle[2],Deg2rad(a2),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handle[3],Deg2rad(a3),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handle[4],Deg2rad(a4),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handle[5],Deg2rad(a5),vrep.simx_opmode_oneshot)
+
+def Move_to_joint_position_rad(a0,a1,a2,a3,a4,a5):
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[0],a0,vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[1],a1,vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[2],a2,vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[3],a3,vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[4],a4,vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[5],a5,vrep.simx_opmode_oneshot)
 
 def move_dummy(x,y,z,rx,ry,rz):
     position = np.array([x,y,z])
@@ -139,9 +152,10 @@ def move_dummy(x,y,z,rx,ry,rz):
     	raise Exception('Cannot get orientation of dummy')
     time.sleep(1)
 
+# changed to based on radian
 def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     # convert from deg to rad and wrap
-    theta = np.array([Deg2rad(deg1),Deg2rad(deg2),Deg2rad(deg3),Deg2rad(deg4),Deg2rad(deg5),Deg2rad(deg6)])
+    theta = np.array([deg1,deg2,deg3,deg4,deg5,deg6])
     # calculate respective transformation matrix
     Tmat_01 = T01(theta[0])
     Tmat_12 = T12(theta[1])
@@ -156,18 +170,23 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     T_reduced = T[0:3]
     # show_dummy(T_reduced)
     # print
-    print("Theoretical result: ")
-    print(T)
-    print('euler of T: ')
-    print(rotm2euler(T_reduced))
+    #print("Theoretical result: ")
+    #print(T)
+    #print('euler of T: ')
+    #print(rotm2euler(T_reduced))
     # return
     return T
 
 # test
-pos_ori_mat = np.matrix([[1,   0,   0,   3.2235e-01],
-                         [0,   1,   0,  -7.3685e-05],
-                         [0,   0,   1,   1.0012e+00],
+Move_to_joint_position_deg(0,0,0,0,-90,0)
+pos_ori_mat = np.matrix([[0,   1,   0,  -1.2235e-01],
+                         [0,   0,   1,   0.6000e-00],
+                         [1,   0,   0,   6.0000e-01],
                          [0,   0,   0,   1         ]])
+dummy_ori = rotm2euler(pos_ori_mat)
+dummy_pos = pos_ori_mat[0:3,3]
+move_dummy(dummy_pos[0],dummy_pos[1],dummy_pos[2],dummy_ori[0],dummy_ori[1],dummy_ori[2])
+time.sleep(2)
 inverse_kinematics(pos_ori_mat)
 
 print('Done3')

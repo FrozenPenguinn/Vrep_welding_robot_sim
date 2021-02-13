@@ -87,6 +87,7 @@ def T6t(tool_length):
 
 #def Arr2mat(arr):
 # reference
+# 在负角度微扰下，rotm2euler的euler值出现全差pi的情况，慎用
 def rotm2euler(R) :
 
     if R[0,2] < 1:
