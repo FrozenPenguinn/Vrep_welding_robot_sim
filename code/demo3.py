@@ -105,8 +105,14 @@ def inverse_kinematics(pos_ori_mat):
         # rot_theta = np.multiply(alpha,Jacobian_trans * error_vector)
         # testing Pseudo inverse method
         print("testing")
+        '''
         J_pseudo = np.dot(Jacobian_trans,np.linalg.inv(Jacobian.dot(Jacobian_trans)))
         dq = J_pseudo.dot(error_vector)
+        print(dq)
+        '''
+        # testing Damped Least Squares Method
+        f = np.linalg.solve(Jacobian.dot(Jacobian_trans) + 0.04 * np.identity(6), error_vector)
+        dq = np.dot(Jacobian_trans, f)
         print(dq)
         #print("norm of rot_theta: ")
         #print(np.linalg.norm(rot_theta))
