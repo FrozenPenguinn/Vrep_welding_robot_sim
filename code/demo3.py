@@ -12,7 +12,7 @@ clientID, joint_handle, end_effector_handle = Connect()
 # initialize
 current_angles = [0,0,0,0,0,0]
 goal_angles = np.zeros(6)
-dtheta = 0.01
+dtheta = 0.001
 tool_length = 0.13
 
 # Solving Ax=b
@@ -43,8 +43,8 @@ def inverse_kinematics(pos_ori_mat):
         #print(goal_PR_mat)
         # error vector
         error_vector = goal_PR_mat - current_PR_mat
-        print("error vector : ")
-        print(error_vector)
+        #print("error vector : ")
+        #print(error_vector)
         # check if error is small enough to quit
         if (np.linalg.norm(error_vector) < 0.01):
             print("Arrived at goal location")
@@ -90,8 +90,8 @@ def inverse_kinematics(pos_ori_mat):
         Jacobian6 = (perturbation_PR_mat6 - current_PR_mat)/dtheta
         # Jacobian matrix
         Jacobian = np.hstack((Jacobian1,Jacobian2,Jacobian3,Jacobian4,Jacobian5,Jacobian6))
-        print("Jacobian matrix: ")
-        print(Jacobian)
+        #print("Jacobian matrix: ")
+        #print(Jacobian)
         # calculuate rot_theta with Jacobian transpose method
         # 应该尝试把位置调整留给大3轴，姿态调整留给小3轴
         Jacobian_trans = Jacobian.transpose()
@@ -99,24 +99,34 @@ def inverse_kinematics(pos_ori_mat):
         #alpha = (np.dot(np.asarray(error_vector),np.asarray(JJTe)))/np.linalg.norm(np.asarray(JJTe))
         reshape_error_vector = error_vector.reshape((1,6))
         #alpha = (np.dot(reshape_error_vector,JJTe))/np.linalg.norm(JJTe)
-        alpha = 0.56
-        print("alpha: ")
-        print(alpha)
-        rot_theta = np.multiply(alpha,Jacobian_trans * error_vector)
-        print("norm of rot_theta: ")
-        print(np.linalg.norm(rot_theta))
-        print("rot_theta: ")
-        print(rot_theta)
+        # alpha = 0.4
+        #print("alpha: ")
+        #print(alpha)
+        # rot_theta = np.multiply(alpha,Jacobian_trans * error_vector)
+        # testing Pseudo inverse method
+        print("testing")
+        J_pseudo = np.dot(Jacobian_trans,np.linalg.inv(Jacobian.dot(Jacobian_trans)))
+        dq = J_pseudo.dot(error_vector)
+        print(dq)
+        #print("norm of rot_theta: ")
+        #print(np.linalg.norm(rot_theta))
+        #print("rot_theta: ")
+        #print(rot_theta)
         # Solve Ax=b
         #rot_theta = np.linalg.solve(Jacobian, error_vector)
         # update goal_angles
+        '''
         for i in range(0,6):
             goal_angles[i] = current_angles[i] + rot_theta[i]
+        Move_to_joint_position_rad(goal_angles[0],goal_angles[1],goal_angles[2],goal_angles[3],goal_angles[4],goal_angles[5])
+        '''
+        for i in range(0,6):
+            goal_angles[i] = current_angles[i] + dq[i]
         Move_to_joint_position_rad(goal_angles[0],goal_angles[1],goal_angles[2],goal_angles[3],goal_angles[4],goal_angles[5])
         #print("goal_angle:")
         #print(goal_angles)
         #time.sleep(0.01)
-        print("end count = " + str(count))
+        #print("end count = " + str(count))
     if (count == 10):
         print('loop too many times')
     return
