@@ -222,7 +222,7 @@ def move_dummy(x,y,z,rx,ry,rz):
     status, dummy_handle = vrep.simxGetObjectHandle(clientID, 'Dummy', vrep.simx_opmode_blocking)
     if status!= vrep.simx_return_ok:
     	raise Exception('Cannot get handle of dummy')
-    time.sleep(1)
+    time.sleep(0.3)
     # move dummy
     status = vrep.simxSetObjectPosition(clientID,dummy_handle,-1,position,vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
@@ -230,7 +230,7 @@ def move_dummy(x,y,z,rx,ry,rz):
     status = vrep.simxSetObjectOrientation(clientID,dummy_handle,-1,orientation,vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
     	raise Exception('Cannot get orientation of dummy')
-    time.sleep(1)
+    time.sleep(0.3)
 
 def set_goal(pos_ori_mat):
     dummy_ori = rotm2euler(pos_ori_mat)
