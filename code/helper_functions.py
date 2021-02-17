@@ -113,28 +113,42 @@ def base2world():
     return
 
 def rotm2quat(R):
-    w = math.sqrt(R[0,0]+R[1,1]+R[2,2]+1)/2
-    x = math.sqrt(R[0,0]-R[1,1]-R[2,2]+1)/2
-    y = math.sqrt(-R[0,0]+R[1,1]-R[2,2]+1)/2
-    z = math.sqrt(-R[0,0]-R[1,1]+R[2,2]+1)/2
+    w = R[0,0]+R[1,1]+R[2,2]
+    x = R[0,0]-R[1,1]-R[2,2]
+    y = -R[0,0]+R[1,1]-R[2,2]
+    z = -R[0,0]-R[1,1]+R[2,2]
     max_axis = max(w,x,y,z)
     if (w == max_axis):
+        w = math.sqrt(R[0,0]+R[1,1]+R[2,2]+1)/2
         x = (R[1,2]-R[2,1])/(4*w)
         y = (R[2,0]-R[0,2])/(4*w)
         z = (R[0,1]-R[1,0])/(4*w)
     elif (x == max_axis):
+        x = math.sqrt(R[0,0]-R[1,1]-R[2,2]+1)/2
         w = (R[1,2]-R[2,1])/(4*x)
         y = (R[0,1]+R[1,0])/(4*x)
         z = (R[2,0]+R[0,2])/(4*x)
     elif (y == max_axis):
+        y = math.sqrt(-R[0,0]+R[1,1]-R[2,2]+1)/2
         w = (R[2,0]-R[0,2])/(4*y)
         x = (R[0,1]+R[1,0])/(4*y)
         z = (R[1,2]+R[2,1])/(4*y)
     else:
+        z = math.sqrt(-R[0,0]-R[1,1]+R[2,2]+1)/2
         w = (R[0,1]-R[1,0])/(4*z)
         x = (R[2,0]+R[0,2])/(4*z)
         y = (R[1,2]+R[2,1])/(4*z)
     return np.array([w, x, y, z])
+
+def quat2rotm(quat):
+    w = quat[0]
+    x = quat[1]
+    y = quat[2]
+    z = quat[3]
+    R = np.matrix([[w*w+x*x-y*y-z*z, 2*(x*y-w*z)    , 2*(x*z+w*y)    ],
+                   [2*(x*y+w*z)    , w*w-x*x+y*y-z*z, 2*(y*z-w*x)    ],
+                   [2*(x*z-w*y)    , 2*(y*z+w*x)    , w*w-x*x-y*y+z*z]])
+    return R
 
 def set_goal(pos_ori_mat):
     dummy_ori = rotm2euler(pos_ori_mat)
