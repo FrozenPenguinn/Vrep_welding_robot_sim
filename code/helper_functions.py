@@ -4,8 +4,6 @@
 # euler2rotm()
 #
 
-
-
 import vrep
 import math
 import numpy as np
@@ -137,3 +135,27 @@ def rotm2quat(R):
         x = (R[2,0]+R[0,2])/(4*z)
         y = (R[1,2]+R[2,1])/(4*z)
     return np.array([w, x, y, z])
+
+def set_goal(pos_ori_mat):
+    dummy_ori = rotm2euler(pos_ori_mat)
+    dummy_pos = pos_ori_mat[0:3,3]
+    move_dummy(dummy_pos[0],dummy_pos[1],dummy_pos[2],dummy_ori[0],dummy_ori[1],dummy_ori[2])
+    return
+
+def move_dummy(x,y,z,rx,ry,rz):
+    position = np.array([x,y,z])
+    orientation = np.array([rx,ry,rz])
+    # get dummy handle
+    status, dummy_handle = vrep.simxGetObjectHandle(clientID, 'Dummy', vrep.simx_opmode_blocking)
+    if status!= vrep.simx_return_ok:
+    	raise Exception('Cannot get handle of dummy')
+    time.sleep(1)
+    # move dummy
+    status = vrep.simxSetObjectPosition(clientID,dummy_handle,-1,position,vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+    	raise Exception('Cannot get position of dummy')
+    status = vrep.simxSetObjectOrientation(clientID,dummy_handle,-1,orientation,vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+    	raise Exception('Cannot get orientation of dummy')
+    time.sleep(1)
+    return
