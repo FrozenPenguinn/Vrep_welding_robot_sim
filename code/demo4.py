@@ -181,38 +181,45 @@ def lerp(current_pos_ori, goal_pos_ori):
     print('lerp done!')
     return
 
-def lerp_b(current_pos_ori, goal_pos_ori):
+def lerp_beta(current_pos_ori, goal_pos_ori):
+    print('start lerp beta')
     current_pos = current_pos_ori[0:3,3]
     goal_pos = goal_pos_ori[0:3,3]
-    velocity = 3e-04
-    error_vector = goal_pos - current_pos
-    error_len = np.linalg.norm(error_vector)
+    velocity = 3e-01
+    error_matrix = goal_pos_ori - current_pos_ori
+    error_len = np.linalg.norm(error_matrix)
     N = (error_len / velocity)+1
+    print("this is N: "+str(N))
     dx = (goal_pos[0] - current_pos[0]) / N
     dy = (goal_pos[1] - current_pos[1]) / N
     dz = (goal_pos[2] - current_pos[2]) / N
     # orientation
     Q1 = rotm2quat(current_pos_ori)
     Q2 = rotm2quat(goal_pos_ori)
-    Q1_con = Q1
-    Q1_con[1:4] = - Q1[1:4]
-    Q12 =  Q1_con * Q2
-    theta = 2 * math.atan2(np.linalg.norm(Q12[1:4]),Q12[0])
-    for i in range(0,int(N)):
+    for i in range(1,int(N)):
+        t = i / N
+        print('this is t'+str(t))
         current_pos_ori[0,3] = current_pos_ori[0,3] + dx
         current_pos_ori[1,3] = current_pos_ori[1,3] + dy
         current_pos_ori[2,3] = current_pos_ori[2,3] + dz
-        quat = (math.sin((1-(i/N))*theta)*Q1+math.sin((i/N)*theta)*Q2)/math.sin(theta)
-        rotm = quat2rotm(quat).transpose()
+        Qt = (1-t)*Q1 + t*Q2
+        print('this is Qt: ')
+        print(Qt)
+        rotm = quat2rotm(Qt).transpose()
+        print('this is rotm: ')
+        print(rotm)
         current_pos_ori[0:3,0:3] = rotm
+        #print('1')
+        #print(current_pos_ori)
+        #print('2')
         inverse_kinematics(current_pos_ori)
-        print(current_pos_ori)
-    current_pos = current_pos_ori[0:3,3]
-    goal_pos = goal_pos_ori[0:3,3]
-    error_vector = goal_pos - current_pos
-    error_len = np.linalg.norm(error_vector)
+        #print('3')
+    #current_pos = current_pos_ori[0:3,3]
+    #goal_pos = goal_pos_ori[0:3,3]
+    error_matrix = goal_pos_ori - current_pos_ori
+    error_len = np.linalg.norm(error_matrix)
     print("error length is: " + str(error_len))
-    print('lerp done!')
+    print('lerp beta done!')
     return
 
 def draw_circle(current_pos_ori, radius):
@@ -309,12 +316,23 @@ pos_ori_mat_1 = np.matrix([[0,   1,   0,   1.2235e-01],
 set_goal(pos_ori_mat_1)
 inverse_kinematics(pos_ori_mat_1)
 
+# pure angle change (failure)
+pos_ori_mat_12 = np.matrix([[0,   1,   0.8,   1.2235e-01],
+                            [0,   0,   0.6,   0.6000e-00],
+                            [1,   0,   0,   6.0000e-01],
+                            [0,   0,   0,   1         ]])
+set_goal(pos_ori_mat_12)
+#lerp_beta(pos_ori_mat_1, pos_ori_mat_12)
+inverse_kinematics(pos_ori_mat_12)
+time.sleep(1)
+
 pos_ori_mat_2 = np.matrix([[0,   1,   0,  -1.2235e-01],
                            [1,   0,   0,   0.5000e-00],
-                           [0,   0,  -1,   5.0000e-01],
+                           [0,   0,  -1,   4.0000e-01],
                            [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_2)
 inverse_kinematics(pos_ori_mat_2)
+#lerp_beta(pos_ori_mat_1, pos_ori_mat_2)
 
 pos_ori_mat_3 = np.matrix([[0,   1,   0,  -1.2235e-01],
                            [1,   0,   0,   0.4000e-00],
