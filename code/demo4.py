@@ -180,7 +180,39 @@ def lerp(current_pos_ori, goal_pos_ori):
     print('lerp done!')
     return
 
-def slerp(current_qua, goal_qua):
+def draw_circle(current_pos_ori, radius):
+    center_pos = current_pos_ori[0:3,3]
+    center_x = center_pos[0]
+    center_y = center_pos[1]
+    center_z = center_pos[2]
+    circumference = 2 * math.pi * radius
+    velocity = 3e-03
+    N = (circumference / velocity)+1
+    dtheta = 2 * math.pi / N
+    theta = 0
+    #print("dtheta is : " + str(dtheta))
+    for _ in range(0,int(N)):
+        current_x = center_x + radius * math.cos(theta)
+        #print("current_x: " + str(current_x))
+        current_y = center_y + radius * math.sin(theta)
+        #print("current_y: " + str(current_y))
+        theta = theta + dtheta
+        #print("old pos ori: ")
+        #print(current_pos_ori)
+        current_pos_ori[0,3] = current_x
+        current_pos_ori[1,3] = current_y
+        #print("1")
+        inverse_kinematics(current_pos_ori)
+        #print("new pos ori: ")
+        #print(current_pos_ori)
+        #print("2")
+        time.sleep(0.02)
+    # use get angle for joints and FK to check error
+    #current_pos = current_pos_ori[0:3,3]
+    #error_vector = center_pos - current_pos
+    #error_len = np.linalg.norm(error_vector)
+    #print("error length is: " + str(error_len))
+    print("draw circle done!")
     return
 
 def move_dummy(x,y,z,rx,ry,rz):
@@ -236,34 +268,45 @@ Move_to_joint_position_deg(0,0,0,0,0,0)
 # diff xyz, same ori
 
 pos_ori_mat_1 = np.matrix([[0,   1,   0,   1.2235e-01],
-                         [0,   0,   1,   0.6000e-00],
-                         [1,   0,   0,   6.0000e-01],
-                         [0,   0,   0,   1         ]])
+                           [0,   0,   1,   0.6000e-00],
+                           [1,   0,   0,   6.0000e-01],
+                           [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_1)
 inverse_kinematics(pos_ori_mat_1)
 
 pos_ori_mat_2 = np.matrix([[0,   1,   0,  -1.2235e-01],
-                         [1,   0,   0,   0.5000e-00],
-                         [0,   0,  -1,   5.0000e-01],
-                         [0,   0,   0,   1         ]])
+                           [1,   0,   0,   0.5000e-00],
+                           [0,   0,  -1,   5.0000e-01],
+                           [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_2)
 inverse_kinematics(pos_ori_mat_2)
 
 pos_ori_mat_3 = np.matrix([[0,   1,   0,  -1.2235e-01],
-                         [1,   0,   0,   0.5000e-00],
-                         [0,   0,  -1,   3.0000e-01],
-                         [0,   0,   0,   1         ]])
+                           [1,   0,   0,   0.4000e-00],
+                           [0,   0,  -1,   3.0000e-01],
+                           [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_3)
 lerp(pos_ori_mat_2,pos_ori_mat_3)
-#inverse_kinematics(pos_ori_mat_3)
+time.sleep(0.5)
+draw_circle(pos_ori_mat_3, 2.0000e-02)
 
 pos_ori_mat_4 = np.matrix([[0,   1,   0,  -1.2235e-01],
-                         [1,   0,   0,   0.7000e-00],
-                         [0,   0,  -1,   3.0000e-01],
-                         [0,   0,   0,   1         ]])
+                           [1,   0,   0,   0.7000e-00],
+                           [0,   0,  -1,   3.0000e-01],
+                           [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_4)
 lerp(pos_ori_mat_3,pos_ori_mat_4)
-#inverse_kinematics(pos_ori_mat_4)
+
+pos_ori_mat_5 = np.matrix([[0,   1,   0,  -3.2235e-01],
+                           [1,   0,   0,   0.7000e-00],
+                           [0,   0,  -1,   3.0000e-01],
+                           [0,   0,   0,   1         ]])
+set_goal(pos_ori_mat_5)
+lerp(pos_ori_mat_3,pos_ori_mat_5)
+
+set_goal(pos_ori_mat_2)
+lerp(pos_ori_mat_5,pos_ori_mat_2)
+
 time.sleep(1)
 
 print('Done3')
