@@ -164,7 +164,7 @@ def lerp(current_pos_ori, goal_pos_ori):
     error_vector = goal_pos - current_pos
     error_len = np.linalg.norm(error_vector)
     N = (error_len / velocity)+1
-    print("N = "+str(N))
+    #print("N = "+str(N))
     dx = (goal_pos[0] - current_pos[0]) / N
     dy = (goal_pos[1] - current_pos[1]) / N
     dz = (goal_pos[2] - current_pos[2]) / N
@@ -177,7 +177,7 @@ def lerp(current_pos_ori, goal_pos_ori):
     goal_pos = goal_pos_ori[0:3,3]
     error_vector = goal_pos - current_pos
     error_len = np.linalg.norm(error_vector)
-    print("error length is: " + str(error_len))
+    #print("error length is: " + str(error_len))
     print('lerp done!')
     return
 
@@ -185,7 +185,7 @@ def lerp_beta(current_pos_ori, goal_pos_ori):
     print('start lerp beta')
     current_pos = current_pos_ori[0:3,3]
     goal_pos = goal_pos_ori[0:3,3]
-    velocity = 3e-01
+    velocity = 3e-03
     error_matrix = goal_pos_ori - current_pos_ori
     error_len = np.linalg.norm(error_matrix)
     N = (error_len / velocity)+1
@@ -198,16 +198,17 @@ def lerp_beta(current_pos_ori, goal_pos_ori):
     Q2 = rotm2quat(goal_pos_ori)
     for i in range(1,int(N)):
         t = i / N
-        print('this is t'+str(t))
+        #print('this is t'+str(t))
         current_pos_ori[0,3] = current_pos_ori[0,3] + dx
         current_pos_ori[1,3] = current_pos_ori[1,3] + dy
         current_pos_ori[2,3] = current_pos_ori[2,3] + dz
         Qt = (1-t)*Q1 + t*Q2
-        print('this is Qt: ')
-        print(Qt)
-        rotm = quat2rotm(Qt).transpose()
-        print('this is rotm: ')
-        print(rotm)
+        #print('this is Qt: ')
+        #print(Qt)
+        #rotm = quat2rotm(Qt).transpose()
+        rotm = quat2rotm(Qt)
+        #print('this is rotm: ')
+        #print(rotm)
         current_pos_ori[0:3,0:3] = rotm
         #print('1')
         #print(current_pos_ori)
@@ -218,7 +219,7 @@ def lerp_beta(current_pos_ori, goal_pos_ori):
     #goal_pos = goal_pos_ori[0:3,3]
     error_matrix = goal_pos_ori - current_pos_ori
     error_len = np.linalg.norm(error_matrix)
-    print("error length is: " + str(error_len))
+    #print("error length is: " + str(error_len))
     print('lerp beta done!')
     return
 
@@ -275,7 +276,11 @@ def move_dummy(x,y,z,rx,ry,rz):
     time.sleep(0.3)
 
 def set_goal(pos_ori_mat):
+    #print("this is pos_ori_mat: ")
+    print(pos_ori_mat)
     dummy_ori = rotm2euler(pos_ori_mat)
+    #print("this is bummy ori: ")
+    print(dummy_ori)
     dummy_pos = pos_ori_mat[0:3,3]
     move_dummy(dummy_pos[0],dummy_pos[1],dummy_pos[2],dummy_ori[0],dummy_ori[1],dummy_ori[2])
     return
@@ -307,7 +312,25 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
 
 # test
 Move_to_joint_position_deg(0,0,0,0,0,0)
-# diff xyz, same ori
+# current tool pos ori mat
+current_mat = np.matrix([[0,   0,   -1,   -3.2235e-01],
+                           [0,   1,   0,   -7.3685e-05],
+                           [1,   0,   0,   +1.0012e+00],
+                           [0,   0,   0,   1         ]])
+#time.sleep(2)
+
+
+'''
+pos_ori_mat_0 = np.matrix([[0,   0,   -1,   -5.2235e-01],
+                           [-1,   0,   0,   -7.3685e-05],
+                           [0,   1,   0,   +1.0012e+00],
+                           [0,   0,   0,   1         ]])
+set_goal(pos_ori_mat_0)
+#time.sleep(3)
+#inverse_kinematics(pos_ori_mat_0)
+lerp(current_mat, pos_ori_mat_0)
+time.sleep(1)
+'''
 
 pos_ori_mat_1 = np.matrix([[0,   1,   0,   1.2235e-01],
                            [0,   0,   1,   0.6000e-00],
@@ -317,30 +340,31 @@ set_goal(pos_ori_mat_1)
 inverse_kinematics(pos_ori_mat_1)
 
 # pure angle change (failure)
-pos_ori_mat_12 = np.matrix([[0,   1,   0.8,   1.2235e-01],
-                            [0,   0,   0.6,   0.6000e-00],
-                            [1,   0,   0,   6.0000e-01],
-                            [0,   0,   0,   1         ]])
+pos_ori_mat_12 = np.matrix([[-1,   0,   0,   1.2235e-01],
+                           [0,   0,   1,   0.6000e-00],
+                           [0,   1,   0,   6.0000e-01],
+                           [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_12)
-#lerp_beta(pos_ori_mat_1, pos_ori_mat_12)
-inverse_kinematics(pos_ori_mat_12)
+lerp_beta(pos_ori_mat_1, pos_ori_mat_12)
+#inverse_kinematics(pos_ori_mat_12)
 time.sleep(1)
+
 
 pos_ori_mat_2 = np.matrix([[0,   1,   0,  -1.2235e-01],
                            [1,   0,   0,   0.5000e-00],
                            [0,   0,  -1,   4.0000e-01],
                            [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_2)
-inverse_kinematics(pos_ori_mat_2)
-#lerp_beta(pos_ori_mat_1, pos_ori_mat_2)
+# inverse_kinematics(pos_ori_mat_2)
+lerp_beta(pos_ori_mat_12, pos_ori_mat_2)
 
 pos_ori_mat_3 = np.matrix([[0,   1,   0,  -1.2235e-01],
                            [1,   0,   0,   0.4000e-00],
                            [0,   0,  -1,   3.0000e-01],
                            [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_3)
-print("goal: ")
-print(pos_ori_mat_3)
+#print("goal: ")
+#print(pos_ori_mat_3)
 lerp(pos_ori_mat_2,pos_ori_mat_3)
 time.sleep(0.5)
 draw_circle(pos_ori_mat_3, 2.0000e-02)

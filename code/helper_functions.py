@@ -87,7 +87,11 @@ def T6t(tool_length):
 # reference
 # 在负角度微扰下，rotm2euler的euler值出现全差pi的情况，慎用
 def rotm2euler(R) :
-
+    '''
+    a = math.atan2(R[2,1],R[2,2])
+    b = math.atan2(-R[2,0],math.sqrt(R[2,1]*R[2,1]+R[2,2]*R[2,2]))
+    g = math.atan2(R[1,0],R[0,0])
+    '''
     if R[0,2] < 1:
         if R[0,2] > -1:
             b = np.arcsin(R[0,2])
@@ -101,7 +105,6 @@ def rotm2euler(R) :
         b = PI/2
         a = np.arctan2(R[1,0],R[1,1])
         g = 0
-
     return np.array([a, b, g])
 
 def euler2rotm(a,b,g):
@@ -148,7 +151,11 @@ def quat2rotm(quat):
     R = np.matrix([[w*w+x*x-y*y-z*z, 2*(x*y-w*z)    , 2*(x*z+w*y)    ],
                    [2*(x*y+w*z)    , w*w-x*x+y*y-z*z, 2*(y*z-w*x)    ],
                    [2*(x*z-w*y)    , 2*(y*z+w*x)    , w*w-x*x-y*y+z*z]])
-    return R
+    # unit
+    R[0:3,0] =  R[0:3,0] / np.linalg.norm(R[0:3,0])
+    R[0:3,1] =  R[0:3,1] / np.linalg.norm(R[0:3,1])
+    R[0:3,2] =  R[0:3,2] / np.linalg.norm(R[0:3,2])
+    return R.transpose()
 
 def set_goal(pos_ori_mat):
     dummy_ori = rotm2euler(pos_ori_mat)
