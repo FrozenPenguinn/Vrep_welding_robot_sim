@@ -178,18 +178,18 @@ def lerp(current_pos_ori, goal_pos_ori):
     error_vector = goal_pos - current_pos
     error_len = np.linalg.norm(error_vector)
     #print("error length is: " + str(error_len))
-    print('lerp done!')
+    #print('lerp done!')
     return
 
 def lerp_beta(current_pos_ori, goal_pos_ori):
-    print('start lerp beta')
+    #print('start lerp beta')
     current_pos = current_pos_ori[0:3,3]
     goal_pos = goal_pos_ori[0:3,3]
     velocity = 3e-03
     error_matrix = goal_pos_ori - current_pos_ori
     error_len = np.linalg.norm(error_matrix)
     N = (error_len / velocity)+1
-    print("this is N: "+str(N))
+    #print("this is N: "+str(N))
     dx = (goal_pos[0] - current_pos[0]) / N
     dy = (goal_pos[1] - current_pos[1]) / N
     dz = (goal_pos[2] - current_pos[2]) / N
@@ -220,7 +220,7 @@ def lerp_beta(current_pos_ori, goal_pos_ori):
     error_matrix = goal_pos_ori - current_pos_ori
     error_len = np.linalg.norm(error_matrix)
     #print("error length is: " + str(error_len))
-    print('lerp beta done!')
+    #print('lerp beta done!')
     return
 
 def draw_circle(current_pos_ori, radius):
@@ -255,7 +255,7 @@ def draw_circle(current_pos_ori, radius):
     #error_vector = center_pos - current_pos
     #error_len = np.linalg.norm(error_vector)
     #print("error length is: " + str(error_len))
-    print("draw circle done!")
+    #print("draw circle done!")
     return
 
 def move_dummy(x,y,z,rx,ry,rz):
@@ -277,10 +277,10 @@ def move_dummy(x,y,z,rx,ry,rz):
 
 def set_goal(pos_ori_mat):
     #print("this is pos_ori_mat: ")
-    print(pos_ori_mat)
+    #print(pos_ori_mat)
     dummy_ori = rotm2euler(pos_ori_mat)
     #print("this is bummy ori: ")
-    print(dummy_ori)
+    #print(dummy_ori)
     dummy_pos = pos_ori_mat[0:3,3]
     move_dummy(dummy_pos[0],dummy_pos[1],dummy_pos[2],dummy_ori[0],dummy_ori[1],dummy_ori[2])
     return
@@ -338,6 +338,7 @@ pos_ori_mat_1 = np.matrix([[0,   1,   0,   1.2235e-01],
                            [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_1)
 inverse_kinematics(pos_ori_mat_1)
+#lerp_beta(current_mat, pos_ori_mat_1)
 
 # pure angle change (failure)
 pos_ori_mat_12 = np.matrix([[-1,   0,   0,   1.2235e-01],
