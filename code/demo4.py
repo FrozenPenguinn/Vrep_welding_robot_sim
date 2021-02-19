@@ -142,12 +142,12 @@ def inverse_kinematics(pos_ori_mat):
         return
 
 def Move_to_joint_position_deg(a0,a1,a2,a3,a4,a5):
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[0],Deg2rad(a0),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[1],Deg2rad(a1),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[2],Deg2rad(a2),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[3],Deg2rad(a3),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[4],Deg2rad(a4),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[5],Deg2rad(a5),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[0],deg2rad(a0),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[1],deg2rad(a1),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[2],deg2rad(a2),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[3],deg2rad(a3),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[4],deg2rad(a4),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[5],deg2rad(a5),vrep.simx_opmode_oneshot)
 
 def Move_to_joint_position_rad(a0,a1,a2,a3,a4,a5):
     vrep.simxSetJointTargetPosition(clientID,joint_handle[0],a0,vrep.simx_opmode_oneshot)
@@ -181,6 +181,7 @@ def lerp(current_pos_ori, goal_pos_ori):
     #print('lerp done!')
     return
 
+# can check is norm of rotation matrix is smaller than 0.001, to adjust speed
 def lerp_beta(current_pos_ori, goal_pos_ori):
     #print('start lerp beta')
     current_pos = current_pos_ori[0:3,3]
@@ -189,6 +190,7 @@ def lerp_beta(current_pos_ori, goal_pos_ori):
     error_matrix = goal_pos_ori - current_pos_ori
     error_len = np.linalg.norm(error_matrix)
     N = (error_len / velocity)+1
+    #print("N is: " + str(N))
     #print("this is N: "+str(N))
     dx = (goal_pos[0] - current_pos[0]) / N
     dy = (goal_pos[1] - current_pos[1]) / N
@@ -348,7 +350,6 @@ pos_ori_mat_12 = np.matrix([[-1,   0,   0,   1.2235e-01],
 set_goal(pos_ori_mat_12)
 lerp_beta(pos_ori_mat_1, pos_ori_mat_12)
 #inverse_kinematics(pos_ori_mat_12)
-time.sleep(1)
 
 
 pos_ori_mat_2 = np.matrix([[0,   1,   0,  -1.2235e-01],
@@ -366,26 +367,32 @@ pos_ori_mat_3 = np.matrix([[0,   1,   0,  -1.2235e-01],
 set_goal(pos_ori_mat_3)
 #print("goal: ")
 #print(pos_ori_mat_3)
-lerp(pos_ori_mat_2,pos_ori_mat_3)
+lerp_beta(pos_ori_mat_2,pos_ori_mat_3)
 time.sleep(0.5)
 draw_circle(pos_ori_mat_3, 2.0000e-02)
 
+'''
 pos_ori_mat_4 = np.matrix([[0,   1,   0,  -1.2235e-01],
                            [1,   0,   0,   0.7000e-00],
                            [0,   0,  -1,   3.0000e-01],
                            [0,   0,   0,   1         ]])
+'''
+pos_ori_mat_4 = np.matrix([[0,   1,   0,  -1.2235e-01],
+                           [0,   0,   1,   0.7000e-00],
+                           [1,   0,   0,   3.0000e-01],
+                           [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_4)
-lerp(pos_ori_mat_3,pos_ori_mat_4)
+lerp_beta(pos_ori_mat_3,pos_ori_mat_4)
 
 pos_ori_mat_5 = np.matrix([[0,   1,   0,  -3.2235e-01],
                            [1,   0,   0,   0.7000e-00],
                            [0,   0,  -1,   3.0000e-01],
                            [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_5)
-lerp(pos_ori_mat_3,pos_ori_mat_5)
+lerp_beta(pos_ori_mat_3,pos_ori_mat_5)
 
 set_goal(pos_ori_mat_2)
-lerp(pos_ori_mat_5,pos_ori_mat_2)
+lerp_beta(pos_ori_mat_5,pos_ori_mat_2)
 
 time.sleep(1)
 

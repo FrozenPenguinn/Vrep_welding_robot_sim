@@ -30,7 +30,7 @@ alpha = np.array([0,-PI/2,0,0,PI/2,-PI/2])
 # theoretical result
 def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     # convert from deg to rad and wrap
-    theta = np.array([Deg2rad(deg1),Deg2rad(deg2),Deg2rad(deg3),Deg2rad(deg4),Deg2rad(deg5),Deg2rad(deg6)])
+    theta = np.array([deg2rad(deg1),deg2rad(deg2),deg2rad(deg3),deg2rad(deg4),deg2rad(deg5),deg2rad(deg6)])
     # calculate respective transformation matrix
     Tmat_01 = T01(theta[0])
     Tmat_12 = T12(theta[1])
@@ -76,12 +76,12 @@ def show_dummy(T):
 
 # experimental vritification
 def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[0],Deg2rad(a0),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[1],Deg2rad(a1),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[2],Deg2rad(a2),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[3],Deg2rad(a3),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[4],Deg2rad(a4),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handle[5],Deg2rad(a5),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[0],deg2rad(a0),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[1],deg2rad(a1),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[2],deg2rad(a2),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[3],deg2rad(a3),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[4],deg2rad(a4),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handle[5],deg2rad(a5),vrep.simx_opmode_oneshot)
     time.sleep(2)
 
 def Get_object_pos_ori_mat():

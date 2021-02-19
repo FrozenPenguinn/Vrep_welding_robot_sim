@@ -1,38 +1,97 @@
-# toolbox content summary
-# 位姿表达转换：
-# rotm2euler()
-# euler2rotm()
-#
+# 工具箱简介    : toolbox content summary
+# 弧角转换      : radian - degree transformations
+# 位姿表达转换   : orientation representation transformations
+# 参照系变换     : frame transformation
+# 机械臂操作     : robotics arm manipulation
+# 假人操作       : bummy manipulation
+# 通信          : communications
 
+# import libraries
 import vrep
 import math
 import numpy as np
+import numpy.linalg as lg
 
+# constants and DH parameters
 PI = math.pi
-d = np.array([0.089159,0,0,0.10915,0.09465,0.0823])
-a = np.array([0,0.425,0.39225,0,0,0])
+d = np.array([0.089159, 0, 0, 0.10915, 0.09465, 0.0823])
+a = np.array([0, 0.425, 0.39225, 0, 0, 0])
 
-def Deg2rad(deg):
+''' radian - degree transformations '''
+
+def deg2rad(deg):
     return deg * PI / 180
 
-def Rad2deg(rad):
+def rad2deg(rad):
     return rad * 180 / PI
 
-# original
-'''
-def T_mat(theta,d,a,alpha):
-    mat = np.matrix([[math.cos(theta), -math.sin(theta)*math.cos(alpha),  math.sin(theta)*math.sin(alpha),   a*math.cos(alpha)],
-                     [math.sin(theta),  math.cos(theta)*math.cos(alpha), -math.cos(theta)*math.sin(alpha),   a*math.sin(alpha)],
-                     [0              ,  math.sin(alpha)                ,  math.cos(alpha)                ,   d                ],
-                     [0              ,  0                              ,  0                              ,   1                ]])
-    return mat
-'''
-def T_mat(theta,d,a,alpha):
-    mat = np.matrix([[math.cos(theta)*math.cos(alpha), -math.sin(theta),  math.cos(theta)*math.sin(alpha),   a*math.cos(theta)],
-                     [math.sin(theta)*math.cos(alpha),  math.cos(theta),  math.sin(theta)*math.sin(alpha),   a*math.sin(theta)],
-                     [-math.sin(alpha)               ,  0              ,  math.cos(alpha)                ,   d                ],
-                     [0                              ,  0              ,  0                              ,   1                ]])
-    return mat
+''' orientation representation transformations '''
+
+# 在使用欧拉角时，注意万向节死锁问题
+def rotm2euler(mat):
+    if mat[0,2] < 1:
+        if mat[0,2] > -1:
+            a = np.arctan2(-mat[1,2], mat[2,2])
+            b = np.arcsin(mat[0,2])
+            g = np.arctan2(-mat[0,1], mat[0,0])
+        else:
+            a = np.arctan2(mat[1,0], mat[1,1])
+            b = -PI/2
+            g = 0
+    else:
+        a = np.arctan2(mat[1,0], mat[1,1])
+        b = PI/2
+        g = 0
+    return np.array([a, b, g]) # 之后要用matrix来打包
+
+def euler2rotm(a,b,g):
+    
+    return
+
+def rotm2quat(R):
+    w = R[0,0]+R[1,1]+R[2,2]
+    x = R[0,0]-R[1,1]-R[2,2]
+    y = -R[0,0]+R[1,1]-R[2,2]
+    z = -R[0,0]-R[1,1]+R[2,2]
+    max_axis = max(w,x,y,z)
+    if (w == max_axis):
+        w = math.sqrt(R[0,0]+R[1,1]+R[2,2]+1)/2
+        x = (R[1,2]-R[2,1])/(4*w)
+        y = (R[2,0]-R[0,2])/(4*w)
+        z = (R[0,1]-R[1,0])/(4*w)
+    elif (x == max_axis):
+        x = math.sqrt(R[0,0]-R[1,1]-R[2,2]+1)/2
+        w = (R[1,2]-R[2,1])/(4*x)
+        y = (R[0,1]+R[1,0])/(4*x)
+        z = (R[2,0]+R[0,2])/(4*x)
+    elif (y == max_axis):
+        y = math.sqrt(-R[0,0]+R[1,1]-R[2,2]+1)/2
+        w = (R[2,0]-R[0,2])/(4*y)
+        x = (R[0,1]+R[1,0])/(4*y)
+        z = (R[1,2]+R[2,1])/(4*y)
+    else:
+        z = math.sqrt(-R[0,0]-R[1,1]+R[2,2]+1)/2
+        w = (R[0,1]-R[1,0])/(4*z)
+        x = (R[2,0]+R[0,2])/(4*z)
+        y = (R[1,2]+R[2,1])/(4*z)
+    return np.array([w, x, y, z])
+
+def quat2rotm(quat):
+    w = quat[0]
+    x = quat[1]
+    y = quat[2]
+    z = quat[3]
+    R = np.matrix([[w*w+x*x-y*y-z*z, 2*(x*y-w*z)    , 2*(x*z+w*y)    ],
+                   [2*(x*y+w*z)    , w*w-x*x+y*y-z*z, 2*(y*z-w*x)    ],
+                   [2*(x*z-w*y)    , 2*(y*z+w*x)    , w*w-x*x-y*y+z*z]])
+    # unit
+    R[0:3,0] =  R[0:3,0] / np.linalg.norm(R[0:3,0])
+    R[0:3,1] =  R[0:3,1] / np.linalg.norm(R[0:3,1])
+    R[0:3,2] =  R[0:3,2] / np.linalg.norm(R[0:3,2])
+    return R.transpose()
+
+
+''' frame transformation '''
 
 def T01(theta):
     mat = np.matrix([[0,  -math.sin(theta),  -math.cos(theta),   0   ],
@@ -82,80 +141,6 @@ def T6t(tool_length):
                      [0,   0,   1,   tool_length ],
                      [0,   0,   0,   1           ]])
     return mat
-
-#def Arr2mat(arr):
-# reference
-# 在负角度微扰下，rotm2euler的euler值出现全差pi的情况，慎用
-def rotm2euler(R) :
-    '''
-    a = math.atan2(R[2,1],R[2,2])
-    b = math.atan2(-R[2,0],math.sqrt(R[2,1]*R[2,1]+R[2,2]*R[2,2]))
-    g = math.atan2(R[1,0],R[0,0])
-    '''
-    if R[0,2] < 1:
-        if R[0,2] > -1:
-            b = np.arcsin(R[0,2])
-            a = np.arctan2(-R[1,2],R[2,2])
-            g = np.arctan2(-R[0,1],R[0,0])
-        else:
-            b = -PI/2
-            a = np.arctan2(R[1,0],R[1,1])
-            g = 0
-    else:
-        b = PI/2
-        a = np.arctan2(R[1,0],R[1,1])
-        g = 0
-    return np.array([a, b, g])
-
-def euler2rotm(a,b,g):
-
-    return
-
-def base2world():
-
-    return
-
-def rotm2quat(R):
-    w = R[0,0]+R[1,1]+R[2,2]
-    x = R[0,0]-R[1,1]-R[2,2]
-    y = -R[0,0]+R[1,1]-R[2,2]
-    z = -R[0,0]-R[1,1]+R[2,2]
-    max_axis = max(w,x,y,z)
-    if (w == max_axis):
-        w = math.sqrt(R[0,0]+R[1,1]+R[2,2]+1)/2
-        x = (R[1,2]-R[2,1])/(4*w)
-        y = (R[2,0]-R[0,2])/(4*w)
-        z = (R[0,1]-R[1,0])/(4*w)
-    elif (x == max_axis):
-        x = math.sqrt(R[0,0]-R[1,1]-R[2,2]+1)/2
-        w = (R[1,2]-R[2,1])/(4*x)
-        y = (R[0,1]+R[1,0])/(4*x)
-        z = (R[2,0]+R[0,2])/(4*x)
-    elif (y == max_axis):
-        y = math.sqrt(-R[0,0]+R[1,1]-R[2,2]+1)/2
-        w = (R[2,0]-R[0,2])/(4*y)
-        x = (R[0,1]+R[1,0])/(4*y)
-        z = (R[1,2]+R[2,1])/(4*y)
-    else:
-        z = math.sqrt(-R[0,0]-R[1,1]+R[2,2]+1)/2
-        w = (R[0,1]-R[1,0])/(4*z)
-        x = (R[2,0]+R[0,2])/(4*z)
-        y = (R[1,2]+R[2,1])/(4*z)
-    return np.array([w, x, y, z])
-
-def quat2rotm(quat):
-    w = quat[0]
-    x = quat[1]
-    y = quat[2]
-    z = quat[3]
-    R = np.matrix([[w*w+x*x-y*y-z*z, 2*(x*y-w*z)    , 2*(x*z+w*y)    ],
-                   [2*(x*y+w*z)    , w*w-x*x+y*y-z*z, 2*(y*z-w*x)    ],
-                   [2*(x*z-w*y)    , 2*(y*z+w*x)    , w*w-x*x-y*y+z*z]])
-    # unit
-    R[0:3,0] =  R[0:3,0] / np.linalg.norm(R[0:3,0])
-    R[0:3,1] =  R[0:3,1] / np.linalg.norm(R[0:3,1])
-    R[0:3,2] =  R[0:3,2] / np.linalg.norm(R[0:3,2])
-    return R.transpose()
 
 def set_goal(pos_ori_mat):
     dummy_ori = rotm2euler(pos_ori_mat)
