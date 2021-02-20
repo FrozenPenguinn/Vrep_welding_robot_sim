@@ -3,8 +3,8 @@ import vrep
 import time
 import numpy as np
 import math
-from connection import *
-from helper_functions import *
+# from connection import *
+from toolbox import *
 
 # connect and get handles
 clientID, joint_handle, end_effector_handle = Connect()

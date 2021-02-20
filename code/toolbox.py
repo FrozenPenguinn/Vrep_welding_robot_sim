@@ -9,6 +9,7 @@
 # import libraries
 import vrep
 import math
+import time
 import numpy as np
 import numpy.linalg as lg
 
@@ -17,6 +18,11 @@ PI = math.pi
 d = np.array([0.089159,  0,      0,        0.10915,  0.09465,  0.0823])
 a = np.array([0,         0.425,  0.39225,  0,        0,        0])
 tool_length = 0.13
+
+# ID and handles
+clientID = 0
+joint_handles = [0,0,0,0,0,0]
+end_effector_handle = 0
 
 ''' radian - degree transformations '''
 
@@ -108,43 +114,43 @@ def quat2rotm(quat):
 def T01(rad):
     mat = np.matrix([[0,  -math.sin(rad),  -math.cos(rad),   0   ],
                      [0,   math.cos(rad),  -math.sin(rad),   0   ],
-                     [1,   0              ,   0              ,   d[0]],
-                     [0,   0              ,   0              ,   1   ]])
+                     [1,   0,               0,               d[0]],
+                     [0,   0,               0,               1   ]])
     return mat
 
 def T12(rad):
     mat = np.matrix([[math.cos(rad),  -math.sin(rad),   0,   a[1]*math.cos(rad)],
                      [math.sin(rad),   math.cos(rad),   0,   a[1]*math.sin(rad)],
-                     [0              ,   0              ,   1,   0              ],
-                     [0              ,   0              ,   0,   1              ]])
+                     [0,               0,               1,   0                 ],
+                     [0,               0,               0,   1                 ]])
     return mat
 
 def T23(rad):
     mat = np.matrix([[math.cos(rad),  -math.sin(rad),   0,   a[2]*math.cos(rad)],
                      [math.sin(rad),   math.cos(rad),   0,   a[2]*math.sin(rad)],
-                     [0              ,   0              ,   1,   0              ],
-                     [0              ,   0              ,   0,   1              ]])
+                     [0,               0,               1,   0                 ],
+                     [0,               0,               0,   1                 ]])
     return mat
 
 def T34(rad):
     mat = np.matrix([[ 0,  -math.sin(rad),  math.cos(rad),   0   ],
                      [ 0,   math.cos(rad),  math.sin(rad),   0   ],
-                     [-1,   0              ,  0              ,   d[3]],
-                     [ 0,   0              ,  0              ,   1   ]])
+                     [-1,   0,              0,               d[3]],
+                     [ 0,   0,              0,               1   ]])
     return mat
 
 def T45(rad):
     mat = np.matrix([[0,  -math.sin(rad),  -math.cos(rad),   0   ],
                      [0,   math.cos(rad),  -math.sin(rad),   0   ],
-                     [1,   0              ,   0              ,   d[4]],
-                     [0,   0              ,   0              ,   1   ]])
+                     [1,   0,               0,               d[4]],
+                     [0,   0,               0,               1   ]])
     return mat
 
 def T56(rad):
     mat = np.matrix([[math.cos(rad),  -math.sin(rad),   0,   0   ],
                      [math.sin(rad),   math.cos(rad),   0,   0   ],
-                     [0              ,   0              ,   1,   d[5]],
-                     [0              ,   0              ,   0,   1   ]])
+                     [0,               0,               1,   d[5]],
+                     [0,               0,               0,   1   ]])
     return mat
 
 def T6t(tool_length):
@@ -156,25 +162,76 @@ def T6t(tool_length):
 
 ''' robotics arm manipulations '''
 
-def forward_kinematics(degs):
-    rads = deg2rad(degs)
-    Tmat_01 = T01(rads[0])
-    Tmat_12 = T12(rads[1])
-    Tmat_23 = T23(rads[2])
-    Tmat_34 = T34(rads[3])
-    Tmat_45 = T45(rads[4])
-    Tmat_56 = T56(rads[5])
-    Tmat_6t = T6t(tool_length)
-    T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
-    return T
+# 在python中使用 *args 来进行函数的重载，不过要注意类型的转换
+def forward_kinematics(*args):
+    if len(args) == 1:
+        rads = deg2rad(args[0])
+        Tmat_01 = T01(rads[0])
+        Tmat_12 = T12(rads[1])
+        Tmat_23 = T23(rads[2])
+        Tmat_34 = T34(rads[3])
+        Tmat_45 = T45(rads[4])
+        Tmat_56 = T56(rads[5])
+        Tmat_6t = T6t(tool_length)
+        T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
+        return T
+    elif len(args) == 6:
+        degs = np.array([args[0], args[1], args[2], args[3], args[4], args[5]])
+        return forward_kinematics(degs)
+    else:
+        raise Exception("numbers of parameters do not match function requirement")
 
-def inverse_kinematics(pos_ori_mat):
+def current_vector(object_handle):
+    # get
+    status, pos_cur = vrep.simxGetObjectPosition(clientID, object_handle, -1, vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+        raise Exception("Cannot get position of end effector")
+    status, ori_cur = vrep.simxGetObjectQuaternion(clientID, object_handle, -1, vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+        raise Exception("Cannot get orientation of end effector")
+    # reshape
+    vec_cur = np.vstack((np.asmatrix(pos_cur).reshape(3,1), np.asmatrix(ori_cur).reshape(4,1)))
+    return vec_cur
+
+def jacobian(degs):
+    J = np.asmatrix(np.zeros((7,6), dtype = float))
+    #print(type(J))
+    #print(J)
+    ddeg = 1
+    mat_cur = forward_kinematics(degs)
+    #print(mat_cur)
+    pos_cur = mat_cur[0:3,3]
+    #print(pos_cur)
+    ori_cur = np.asmatrix(rotm2quat(mat_cur)).reshape(4,1)
+    #print(ori_cur)
+    vec_cur = np.vstack((pos_cur, ori_cur))
+    # print(vec_cur)
+    for i in range(0,6):
+        #print(i)
+        degs_per = degs.copy()
+        #print(degs)
+        #print(degs_per)
+        degs_per[i] = degs_per[i] + ddeg
+        #print("this is degs_per: ")
+        #print(degs_per)
+        mat_per = forward_kinematics(degs_per)
+        pos_per = mat_per[0:3,3]
+        ori_per = np.asmatrix(rotm2quat(mat_per)).reshape(4,1)
+        vec_per = np.vstack((pos_per, ori_per))
+        #print(type(vec_per))
+        #print("this is vec_per: ")
+        #print(vec_per)
+        J[0:7,i] = (vec_per - vec_cur) / ddeg
+    #print(J)
+    return J
+
+def inverse_kinematics(mat):
     count = 0
     while (count < 600):
         count = count + 1
         for i in range(0,6):
             current_angles[i] = goal_angles[i]
-        current_T = Forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5])
+        current_T = forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5])
         current_P = current_T[0:3,3]
         current_R = np.asmatrix(rotm2quat(current_T))
         current_R = current_R.reshape((4,1))
@@ -187,12 +244,13 @@ def inverse_kinematics(pos_ori_mat):
         if (np.linalg.norm(error_vector) < 0.003):
             Move_to_joint_position_rad(goal_angles[0],goal_angles[1],goal_angles[2],goal_angles[3],goal_angles[4],goal_angles[5])
             break
-        perturbation_T1 = Forward_kinematics(current_angles[0]+dtheta,current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5])
-        perturbation_T2 = Forward_kinematics(current_angles[0],current_angles[1]+dtheta,current_angles[2],current_angles[3],current_angles[4],current_angles[5])
-        perturbation_T3 = Forward_kinematics(current_angles[0],current_angles[1],current_angles[2]+dtheta,current_angles[3],current_angles[4],current_angles[5])
-        perturbation_T4 = Forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3]+dtheta,current_angles[4],current_angles[5])
-        perturbation_T5 = Forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4]+dtheta,current_angles[5])
-        perturbation_T6 = Forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5]+dtheta)
+        # perterbation
+        perturbation_T1 = forward_kinematics(current_angles[0]+dtheta,current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5])
+        perturbation_T2 = forward_kinematics(current_angles[0],current_angles[1]+dtheta,current_angles[2],current_angles[3],current_angles[4],current_angles[5])
+        perturbation_T3 = forward_kinematics(current_angles[0],current_angles[1],current_angles[2]+dtheta,current_angles[3],current_angles[4],current_angles[5])
+        perturbation_T4 = forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3]+dtheta,current_angles[4],current_angles[5])
+        perturbation_T5 = forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4]+dtheta,current_angles[5])
+        perturbation_T6 = forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5]+dtheta)
         # extraction
         perturbation_P1 = perturbation_T1[0:3,3]
         perturbation_P2 = perturbation_T2[0:3,3]
@@ -256,3 +314,64 @@ def move_dummy(x,y,z,rx,ry,rz):
     	raise Exception('Cannot get orientation of dummy')
     time.sleep(1)
     return
+
+''' Communications '''
+
+def Connect():
+    # just in case, stop all prior connection
+    vrep.simxFinish(-1)
+    # connect to vrep server
+    clientID = vrep.simxStart('127.0.0.1', 19999, True, True, 5000, 5)
+    if clientID != -1:  # check if client connection successful
+        print("Connected successful")
+    else:
+        raise Exception("Failed to connect")
+
+    # start simulation
+    vrep.simxStartSimulation(clientID, vrep.simx_opmode_oneshot)
+
+    # get handles
+    status, joint1_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint1',vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+        raise Exception("Cannot get handle of first joint")
+
+    status, joint2_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint2',vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+        raise Exception("Cannot get handle of second joint")
+
+    status, joint3_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint3',vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+        raise Exception("Cannot get handle of third joint")
+
+    status, joint4_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint4',vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+        raise Exception("Cannot get handle of fourth joint")
+
+    status, joint5_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint5',vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+        raise Exception("Cannot get handle of fifth joint")
+
+    status, joint6_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint6',vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+        raise Exception("Cannot get handle of sixth joint")
+
+    status, welding_torch_handle = vrep.simxGetObjectHandle(clientID, 'Welding_torch', vrep.simx_opmode_blocking)
+    if status!= vrep.simx_return_ok:
+    	raise Exception('Cannot get handle of end effector')
+
+    # wrapping
+    joint_handles = np.zeros(6, dtype=np.int)
+    joint_handles[0] = joint1_handle
+    joint_handles[1] = joint2_handle
+    joint_handles[2] = joint3_handle
+    joint_handles[3] = joint4_handle
+    joint_handles[4] = joint5_handle
+    joint_handles[5] = joint6_handle
+
+    # return
+    return clientID, joint_handles, welding_torch_handle
+
+def Disconnect(clientID):
+    vrep.simxStopSimulation(clientID, vrep.simx_opmode_oneshot)
+    time.sleep(1)
+    vrep.simxFinish(clientID)

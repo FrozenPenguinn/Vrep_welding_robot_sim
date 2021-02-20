@@ -3,8 +3,8 @@ import vrep
 import time
 import numpy as np
 import math
-from connection import *
-from helper_functions import *
+# from connection import *
+from toolbox import *
 
 # connect and get handles
 clientID, joint_handle, end_effector_handle = Connect()
@@ -93,6 +93,7 @@ def inverse_kinematics(pos_ori_mat):
         Jacobian6 = (perturbation_PR_mat6 - current_PR_mat)/dtheta
         # Jacobian matrix
         Jacobian = np.hstack((Jacobian1,Jacobian2,Jacobian3,Jacobian4,Jacobian5,Jacobian6))
+        print(Jacobian)
         #print("Jacobian matrix: ")
         #print(Jacobian)
         # calculuate rot_theta with Jacobian transpose method
@@ -340,6 +341,7 @@ pos_ori_mat_1 = np.matrix([[0,   1,   0,   1.2235e-01],
                            [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_1)
 inverse_kinematics(pos_ori_mat_1)
+Disconnect(clientID)
 #lerp_beta(current_mat, pos_ori_mat_1)
 
 # pure angle change (failure)
