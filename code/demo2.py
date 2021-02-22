@@ -16,7 +16,7 @@ max_torque = 200
 tool_length = 0.13
 
 # connect and get handles
-clientID, joint_handle, end_effector_handle = Connect()
+clientID, joint_handle, end_effector_handle = connect()
 
 # set max torque
 for i in range(6):
@@ -100,4 +100,4 @@ Get_object_pos_ori_mat()
 print('Done2')
 
 # stop simulation and close connections
-# Disconnect(clientID)
+disconnect(clientID)

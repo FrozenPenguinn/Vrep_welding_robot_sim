@@ -13,7 +13,7 @@ joint_angle = np.zeros(6)
 max_torque = 150
 
 # connect and get handles
-clientID, joint_handle, end_effector_handle = Connect()
+clientID, joint_handle, end_effector_handle = connect()
 
 # move joint
 def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
@@ -24,22 +24,30 @@ def Move_to_joint_position(a0,a1,a2,a3,a4,a5):
     vrep.simxSetJointTargetPosition(clientID,joint_handle[4],deg2rad(a4),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handle[5],deg2rad(a5),vrep.simx_opmode_oneshot)
 
-'''
-_ , x = vrep.simxGetObjectPosition(clientID, end_effector_handle, -1, vrep.simx_opmode_blocking)
-print(type(np.asmatrix(x)))
-print(np.asmatrix(x))
-print(np.asmatrix(x).reshape(3,1))
-print(vrep.simxGetObjectQuaternion(clientID, end_effector_handle, -1, vrep.simx_opmode_blocking))
-'''
+#print(current_vector(end_effector_handle))
 
 # This is main function
+_, x = vrep.simxGetJointPosition(clientID, joint_handle[0], vrep.simx_opmode_blocking)
+time.sleep(2)
+print(0)
+print(x)
 Move_to_joint_position(90,90,-90,90,90,90)
-time.sleep(1)
+time.sleep(2)
+_, x = vrep.simxGetJointPosition(clientID, joint_handle[0], vrep.simx_opmode_blocking)
+print(90)
+print(x)
+time.sleep(2)
 Move_to_joint_position(-90,45,90,135,90,90)
-time.sleep(1)
+time.sleep(2)
+_, x = vrep.simxGetJointPosition(clientID, joint_handle[0], vrep.simx_opmode_blocking)
+print(-90)
+print(x)
 Move_to_joint_position(0,0,0,0,0,0)
-time.sleep(1)
+time.sleep(2)
+_, x = vrep.simxGetJointPosition(clientID, joint_handle[0], vrep.simx_opmode_blocking)
+print(0)
+print(x)
 print('Done1')
 
 # stop simulation and close connections
-#Disconnect(clientID)
+disconnect(clientID)

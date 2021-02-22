@@ -5,6 +5,7 @@
 # 机械臂操作     : robotics arm manipulations
 # 假人操作       : bummy manipulations
 # 通信          : communications
+# 辅助函数      :  helper functions
 
 # import libraries
 import vrep
@@ -21,8 +22,8 @@ tool_length = 0.13
 
 # ID and handles
 clientID = 0
-joint_handles = [0,0,0,0,0,0]
-end_effector_handle = 0
+joint_handles = np.array(6, dtype=int)
+welding_torch_handle = 0
 
 ''' radian - degree transformations '''
 
@@ -163,25 +164,18 @@ def T6t(tool_length):
 ''' robotics arm manipulations '''
 
 # 在python中使用 *args 来进行函数的重载，不过要注意类型的转换
-def forward_kinematics(*args):
-    if len(args) == 1:
-        rads = deg2rad(args[0])
-        Tmat_01 = T01(rads[0])
-        Tmat_12 = T12(rads[1])
-        Tmat_23 = T23(rads[2])
-        Tmat_34 = T34(rads[3])
-        Tmat_45 = T45(rads[4])
-        Tmat_56 = T56(rads[5])
-        Tmat_6t = T6t(tool_length)
-        T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
-        return T
-    elif len(args) == 6:
-        degs = np.array([args[0], args[1], args[2], args[3], args[4], args[5]])
-        return forward_kinematics(degs)
-    else:
-        raise Exception("numbers of parameters do not match function requirement")
+def forward_kinematics(rad1, rad2, rad3, rad4, rad5, rad6):
+    Tmat_01 = T01(rad1)
+    Tmat_12 = T12(rad2)
+    Tmat_23 = T23(rad3)
+    Tmat_34 = T34(rad4)
+    Tmat_45 = T45(rad5)
+    Tmat_56 = T56(rad6)
+    Tmat_6t = T6t(tool_length)
+    T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
+    return T
 
-def current_vector(object_handle):
+def get_current_vector(object_handle):
     # get
     status, pos_cur = vrep.simxGetObjectPosition(clientID, object_handle, -1, vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
@@ -193,101 +187,124 @@ def current_vector(object_handle):
     vec_cur = np.vstack((np.asmatrix(pos_cur).reshape(3,1), np.asmatrix(ori_cur).reshape(4,1)))
     return vec_cur
 
-def jacobian(degs):
+def get_current_joints():
+    joint_angles = [0.0,0.0,0.0,0.0,0.0,0.0]
+    _, joint_angles[0] = vrep.simxGetJointPosition(clientID, joint_handles[0], vrep.simx_opmode_blocking)
+    _, joint_angles[1] = vrep.simxGetJointPosition(clientID, joint_handles[1], vrep.simx_opmode_blocking)
+    _, joint_angles[2] = vrep.simxGetJointPosition(clientID, joint_handles[2], vrep.simx_opmode_blocking)
+    _, joint_angles[3] = vrep.simxGetJointPosition(clientID, joint_handles[3], vrep.simx_opmode_blocking)
+    _, joint_angles[4] = vrep.simxGetJointPosition(clientID, joint_handles[4], vrep.simx_opmode_blocking)
+    _, joint_angles[5] = vrep.simxGetJointPosition(clientID, joint_handles[5], vrep.simx_opmode_blocking)
+    return joint_angles
+
+def jacobian(rads):
     J = np.asmatrix(np.zeros((7,6), dtype = float))
-    #print(type(J))
-    #print(J)
-    ddeg = 1
-    mat_cur = forward_kinematics(degs)
-    #print(mat_cur)
+    drad = 0.001
+    #print("this is rads in Jacobian: ")
+    #print(rads)
+    #print(type(rads))
+    mat_cur = forward_kinematics(rads[0],rads[1],rads[2],rads[3],rads[4],rads[5])
     pos_cur = mat_cur[0:3,3]
-    #print(pos_cur)
     ori_cur = np.asmatrix(rotm2quat(mat_cur)).reshape(4,1)
-    #print(ori_cur)
     vec_cur = np.vstack((pos_cur, ori_cur))
-    # print(vec_cur)
     for i in range(0,6):
-        #print(i)
-        degs_per = degs.copy()
-        #print(degs)
-        #print(degs_per)
-        degs_per[i] = degs_per[i] + ddeg
-        #print("this is degs_per: ")
-        #print(degs_per)
-        mat_per = forward_kinematics(degs_per)
+        rads_per = rads.copy()
+        rads_per[i] = rads_per[i] + drad
+        #print("this is rads_per in Jacobian: ")
+        #print(rads_per[0])
+        mat_per = forward_kinematics(rads_per[0],rads_per[1],rads_per[2],rads_per[3],rads_per[4],rads_per[5])
         pos_per = mat_per[0:3,3]
         ori_per = np.asmatrix(rotm2quat(mat_per)).reshape(4,1)
         vec_per = np.vstack((pos_per, ori_per))
-        #print(type(vec_per))
-        #print("this is vec_per: ")
-        #print(vec_per)
-        J[0:7,i] = (vec_per - vec_cur) / ddeg
-    #print(J)
+        J[0:7,i] = (vec_per - vec_cur) / drad
     return J
 
-def inverse_kinematics(mat):
-    count = 0
-    while (count < 600):
-        count = count + 1
-        for i in range(0,6):
-            current_angles[i] = goal_angles[i]
-        current_T = forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5])
-        current_P = current_T[0:3,3]
-        current_R = np.asmatrix(rotm2quat(current_T))
-        current_R = current_R.reshape((4,1))
-        current_PR_mat = np.vstack((current_P,current_R))
-        goal_P = pos_ori_mat[0:3,3]
-        goal_R = np.asmatrix(rotm2quat(pos_ori_mat))
-        goal_R = goal_R.reshape((4,1))
-        goal_PR_mat = np.vstack((goal_P,goal_R))
-        error_vector = goal_PR_mat - current_PR_mat
-        if (np.linalg.norm(error_vector) < 0.003):
-            Move_to_joint_position_rad(goal_angles[0],goal_angles[1],goal_angles[2],goal_angles[3],goal_angles[4],goal_angles[5])
+# 注意array, matrix, list三者之间的转换
+def inverse_kinematics(mat_goal):
+    iteration = 0
+    # current cartesian position and quaternion orientation vector from get_current_vector
+    rad_cur = np.asmatrix(get_current_joints())
+    #print(rad_cur)
+    #print('this is type of rad_cur: ')
+    #print(type(rad_cur))
+    vec_cur = get_current_vector(welding_torch_handle)
+    # goal matrix to cartesian position and quaternion orientation vector
+    pos_goal = mat_goal[0:3,3]
+    ori_goal = np.asmatrix(rotm2quat(mat_goal)).reshape(4,1)
+    vec_goal = np.vstack((pos_goal, ori_goal))
+    while (iteration < 20):
+        iteration = iteration + 1
+        vec_err = vec_goal - vec_cur
+        if (lg.norm(vec_err) < 0.003):
+            rad_cur = rad_cur.tolist()
+            move_joint_rad(rad_cur[0])
+            #print(rad_cur[0][0])
+            #print(type(rad_cur[0][0]))
             break
-        # perterbation
-        perturbation_T1 = forward_kinematics(current_angles[0]+dtheta,current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5])
-        perturbation_T2 = forward_kinematics(current_angles[0],current_angles[1]+dtheta,current_angles[2],current_angles[3],current_angles[4],current_angles[5])
-        perturbation_T3 = forward_kinematics(current_angles[0],current_angles[1],current_angles[2]+dtheta,current_angles[3],current_angles[4],current_angles[5])
-        perturbation_T4 = forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3]+dtheta,current_angles[4],current_angles[5])
-        perturbation_T5 = forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4]+dtheta,current_angles[5])
-        perturbation_T6 = forward_kinematics(current_angles[0],current_angles[1],current_angles[2],current_angles[3],current_angles[4],current_angles[5]+dtheta)
-        # extraction
-        perturbation_P1 = perturbation_T1[0:3,3]
-        perturbation_P2 = perturbation_T2[0:3,3]
-        perturbation_P3 = perturbation_T3[0:3,3]
-        perturbation_P4 = perturbation_T4[0:3,3]
-        perturbation_P5 = perturbation_T5[0:3,3]
-        perturbation_P6 = perturbation_T6[0:3,3]
-        perturbation_R1 = np.asmatrix(rotm2quat(perturbation_T1)).reshape((4,1))
-        perturbation_R2 = np.asmatrix(rotm2quat(perturbation_T2)).reshape((4,1))
-        perturbation_R3 = np.asmatrix(rotm2quat(perturbation_T3)).reshape((4,1))
-        perturbation_R4 = np.asmatrix(rotm2quat(perturbation_T4)).reshape((4,1))
-        perturbation_R5 = np.asmatrix(rotm2quat(perturbation_T5)).reshape((4,1))
-        perturbation_R6 = np.asmatrix(rotm2quat(perturbation_T6)).reshape((4,1))
-        #  PR stack and reshape
-        perturbation_PR_mat1 = np.vstack((perturbation_P1,perturbation_R1))
-        perturbation_PR_mat2 = np.vstack((perturbation_P2,perturbation_R2))
-        perturbation_PR_mat3 = np.vstack((perturbation_P3,perturbation_R3))
-        perturbation_PR_mat4 = np.vstack((perturbation_P4,perturbation_R4))
-        perturbation_PR_mat5 = np.vstack((perturbation_P5,perturbation_R5))
-        perturbation_PR_mat6 = np.vstack((perturbation_P6,perturbation_R6))
-        # Jacobian columns
-        Jacobian1 = (perturbation_PR_mat1 - current_PR_mat)/dtheta
-        Jacobian2 = (perturbation_PR_mat2 - current_PR_mat)/dtheta
-        Jacobian3 = (perturbation_PR_mat3 - current_PR_mat)/dtheta
-        Jacobian4 = (perturbation_PR_mat4 - current_PR_mat)/dtheta
-        Jacobian5 = (perturbation_PR_mat5 - current_PR_mat)/dtheta
-        Jacobian6 = (perturbation_PR_mat6 - current_PR_mat)/dtheta
-        # Jacobian matrix
-        Jacobian = np.hstack((Jacobian1,Jacobian2,Jacobian3,Jacobian4,Jacobian5,Jacobian6))
-        Jacobian_trans = Jacobian.transpose()
-        f = np.linalg.solve(Jacobian.dot(Jacobian_trans) + 0.04 * np.identity(7), error_vector)
-        dq = np.dot(Jacobian_trans, f)
-        for i in range(0,6):
-            goal_angles[i] = current_angles[i] + dq[i]
-    if (count > 200):
-        print('loop too many times')
-        return
+        # iteration of joint angles through Jacobian
+        rad_cur = rad_cur.tolist()
+        J = jacobian(rad_cur[0])
+        rad_cur = np.asmatrix(rad_cur)
+        '''
+        print("this is rad_cur: ")
+        print(rad_cur)
+        print(type(rad_cur))
+        '''
+        f = lg.solve(J.dot(J.transpose()) + 0.04 * np.identity(7), vec_err)
+        dq = np.dot(J.transpose(), f).reshape(1,6)
+        '''
+        print('this is dq: ')
+        print(type(dq))
+        print(dq)
+        print(rad_cur)
+        '''
+        rad_cur = rad_cur + dq
+        #print('this is new dq')
+        #print(rad_cur)
+        '''
+        print("this is rad_cur before addition: ")
+        print(rad_cur)
+        print(type(rad_cur))
+        print("this is dq: ")
+        print(dq)
+        print(type(dq))
+        '''
+        #print(rad_cur[0])
+        #print(type(rad_cur[0]))
+        #print('this is dq: ')
+        #print(dq[0])
+        #print(type(dq[0]))
+        #rad_cur = (np.asmatrix(rad_cur) + dq).tolist()
+        #print(type(rad_cur))
+        #print(rad_cur)
+        #print("Iteration = " + str(iteration))
+        #print("this is rad_cur after addition: ")
+        #print(type(rad_cur[0]))
+        #print(type(rad_cur))
+        #print(rad_cur[0,0])
+        #print(type(rad_cur[0,0]))
+        mat_cur = forward_kinematics(rad_cur[0,0],rad_cur[0,1],rad_cur[0,2],rad_cur[0,3],rad_cur[0,4],rad_cur[0,5])
+        pos_cur = mat_cur[0:3,3]
+        ori_cur = np.asmatrix(rotm2quat(mat_cur)).reshape(4,1)
+        vec_cur = np.vstack((pos_cur, ori_cur))
+    if (iteration > 100):
+        print("loop too many times")
+
+def move_joint_deg(target):
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[0],deg2rad(target[0]),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[1],deg2rad(target[1]),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[2],deg2rad(target[2]),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[3],deg2rad(target[3]),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[4],deg2rad(target[4]),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[5],deg2rad(target[5]),vrep.simx_opmode_oneshot)
+
+def move_joint_rad(target):
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[0],target[0],vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[1],target[1],vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[2],target[2],vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[3],target[3],vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[4],target[4],vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[5],target[5],vrep.simx_opmode_oneshot)
 
 ''' bummy manipulations '''
 
@@ -317,7 +334,11 @@ def move_dummy(x,y,z,rx,ry,rz):
 
 ''' Communications '''
 
-def Connect():
+def connect():
+    # declare global
+    global clientID
+    global joint_handles
+    global welding_torch_handle
     # just in case, stop all prior connection
     vrep.simxFinish(-1)
     # connect to vrep server
@@ -371,7 +392,9 @@ def Connect():
     # return
     return clientID, joint_handles, welding_torch_handle
 
-def Disconnect(clientID):
+def disconnect(clientID):
     vrep.simxStopSimulation(clientID, vrep.simx_opmode_oneshot)
     time.sleep(1)
     vrep.simxFinish(clientID)
+
+''' helper functions '''

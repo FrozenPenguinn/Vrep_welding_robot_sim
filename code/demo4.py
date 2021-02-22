@@ -7,7 +7,7 @@ import math
 from toolbox import *
 
 # connect and get handles
-clientID, joint_handle, end_effector_handle = Connect()
+clientID, joint_handle, end_effector_handle = connect()
 
 # initialize
 current_angles = [0,0,0,0,0,0]
@@ -93,7 +93,7 @@ def inverse_kinematics(pos_ori_mat):
         Jacobian6 = (perturbation_PR_mat6 - current_PR_mat)/dtheta
         # Jacobian matrix
         Jacobian = np.hstack((Jacobian1,Jacobian2,Jacobian3,Jacobian4,Jacobian5,Jacobian6))
-        print(Jacobian)
+        #print(Jacobian)
         #print("Jacobian matrix: ")
         #print(Jacobian)
         # calculuate rot_theta with Jacobian transpose method
@@ -265,10 +265,11 @@ def move_dummy(x,y,z,rx,ry,rz):
     position = np.array([x,y,z])
     orientation = np.array([rx,ry,rz])
     # get dummy handle
+    #print(1)
     status, dummy_handle = vrep.simxGetObjectHandle(clientID, 'Dummy', vrep.simx_opmode_blocking)
     if status!= vrep.simx_return_ok:
     	raise Exception('Cannot get handle of dummy')
-    time.sleep(0.3)
+    time.sleep(1)
     # move dummy
     status = vrep.simxSetObjectPosition(clientID,dummy_handle,-1,position,vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
@@ -276,7 +277,8 @@ def move_dummy(x,y,z,rx,ry,rz):
     status = vrep.simxSetObjectOrientation(clientID,dummy_handle,-1,orientation,vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
     	raise Exception('Cannot get orientation of dummy')
-    time.sleep(0.3)
+    #print(2)
+    time.sleep(1)
 
 def set_goal(pos_ori_mat):
     #print("this is pos_ori_mat: ")
@@ -341,7 +343,7 @@ pos_ori_mat_1 = np.matrix([[0,   1,   0,   1.2235e-01],
                            [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_1)
 inverse_kinematics(pos_ori_mat_1)
-Disconnect(clientID)
+#Disconnect(clientID)
 #lerp_beta(current_mat, pos_ori_mat_1)
 
 # pure angle change (failure)
@@ -401,4 +403,4 @@ time.sleep(1)
 print('Done3')
 
 # stop simulation and close connections
-Disconnect(clientID)
+disconnect(clientID)

@@ -7,7 +7,7 @@ import math
 from toolbox import *
 
 # connect and get handles
-clientID, joint_handle, end_effector_handle = Connect()
+clientID, joint_handle, end_effector_handle = connect()
 
 # initialize
 current_angles = [0,0,0,0,0,0]
@@ -366,4 +366,4 @@ time.sleep(1)
 print('Done3')
 
 # stop simulation and close connections
-Disconnect(clientID)
+disconnect(clientID)
