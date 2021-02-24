@@ -2,7 +2,9 @@
 # 弧角转换      : radian - degree transformations
 # 位姿表达转换   : orientation representation transformations
 # 参照系变换     : frame transformations
-# 机械臂操作     : robotics arm manipulations
+# 机械臂解算     : robotic arm motion resoutions
+# 机械臂运动     : robotic arm manipulations
+# 轨迹插补       : path interpolation
 # 假人操作       : bummy manipulations
 # 通信          : communications
 # 辅助函数      :  helper functions
@@ -161,7 +163,7 @@ def T6t(tool_length):
                      [0,   0,   0,   1           ]])
     return mat
 
-''' robotics arm manipulations '''
+''' robotic arm motion resoutions '''
 
 # 在python中使用 *args 来进行函数的重载，不过要注意类型的转换
 def forward_kinematics(rad1, rad2, rad3, rad4, rad5, rad6):
@@ -175,34 +177,11 @@ def forward_kinematics(rad1, rad2, rad3, rad4, rad5, rad6):
     T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
     return T
 
-def get_current_vector(object_handle):
-    # get
-    status, pos_cur = vrep.simxGetObjectPosition(clientID, object_handle, -1, vrep.simx_opmode_blocking)
-    if status != vrep.simx_return_ok:
-        raise Exception("Cannot get position of end effector")
-    status, ori_cur = vrep.simxGetObjectQuaternion(clientID, object_handle, -1, vrep.simx_opmode_blocking)
-    if status != vrep.simx_return_ok:
-        raise Exception("Cannot get orientation of end effector")
-    # reshape
-    vec_cur = np.vstack((np.asmatrix(pos_cur).reshape(3,1), np.asmatrix(ori_cur).reshape(4,1)))
-    return vec_cur
-
-def get_current_joints():
-    joint_angles = [0.0,0.0,0.0,0.0,0.0,0.0]
-    _, joint_angles[0] = vrep.simxGetJointPosition(clientID, joint_handles[0], vrep.simx_opmode_blocking)
-    _, joint_angles[1] = vrep.simxGetJointPosition(clientID, joint_handles[1], vrep.simx_opmode_blocking)
-    _, joint_angles[2] = vrep.simxGetJointPosition(clientID, joint_handles[2], vrep.simx_opmode_blocking)
-    _, joint_angles[3] = vrep.simxGetJointPosition(clientID, joint_handles[3], vrep.simx_opmode_blocking)
-    _, joint_angles[4] = vrep.simxGetJointPosition(clientID, joint_handles[4], vrep.simx_opmode_blocking)
-    _, joint_angles[5] = vrep.simxGetJointPosition(clientID, joint_handles[5], vrep.simx_opmode_blocking)
-    return joint_angles
-
 def jacobian(rads):
+    # initialize
     J = np.asmatrix(np.zeros((7,6), dtype = float))
-    drad = 0.001
-    #print("this is rads in Jacobian: ")
-    #print(rads)
-    #print(type(rads))
+    drad = 0.001 # perturbation value
+    # numerical dirivative is given by f'(x) = [f(x+dx)-f(x)]/dt
     mat_cur = forward_kinematics(rads[0],rads[1],rads[2],rads[3],rads[4],rads[5])
     pos_cur = mat_cur[0:3,3]
     ori_cur = np.asmatrix(rotm2quat(mat_cur)).reshape(4,1)
@@ -210,8 +189,6 @@ def jacobian(rads):
     for i in range(0,6):
         rads_per = rads.copy()
         rads_per[i] = rads_per[i] + drad
-        #print("this is rads_per in Jacobian: ")
-        #print(rads_per[0])
         mat_per = forward_kinematics(rads_per[0],rads_per[1],rads_per[2],rads_per[3],rads_per[4],rads_per[5])
         pos_per = mat_per[0:3,3]
         ori_per = np.asmatrix(rotm2quat(mat_per)).reshape(4,1)
@@ -224,65 +201,26 @@ def inverse_kinematics(mat_goal):
     iteration = 0
     # current cartesian position and quaternion orientation vector from get_current_vector
     rad_cur = np.asmatrix(get_current_joints())
-    #print(rad_cur)
-    #print('this is type of rad_cur: ')
-    #print(type(rad_cur))
     vec_cur = get_current_vector(welding_torch_handle)
     # goal matrix to cartesian position and quaternion orientation vector
     pos_goal = mat_goal[0:3,3]
     ori_goal = np.asmatrix(rotm2quat(mat_goal)).reshape(4,1)
     vec_goal = np.vstack((pos_goal, ori_goal))
-    while (iteration < 20):
+    while (iteration < 100):
         iteration = iteration + 1
         vec_err = vec_goal - vec_cur
         if (lg.norm(vec_err) < 0.003):
             rad_cur = rad_cur.tolist()
             move_joint_rad(rad_cur[0])
-            #print(rad_cur[0][0])
-            #print(type(rad_cur[0][0]))
+            print("Iteration = " + str(iteration))
             break
         # iteration of joint angles through Jacobian
         rad_cur = rad_cur.tolist()
         J = jacobian(rad_cur[0])
         rad_cur = np.asmatrix(rad_cur)
-        '''
-        print("this is rad_cur: ")
-        print(rad_cur)
-        print(type(rad_cur))
-        '''
         f = lg.solve(J.dot(J.transpose()) + 0.04 * np.identity(7), vec_err)
         dq = np.dot(J.transpose(), f).reshape(1,6)
-        '''
-        print('this is dq: ')
-        print(type(dq))
-        print(dq)
-        print(rad_cur)
-        '''
         rad_cur = rad_cur + dq
-        #print('this is new dq')
-        #print(rad_cur)
-        '''
-        print("this is rad_cur before addition: ")
-        print(rad_cur)
-        print(type(rad_cur))
-        print("this is dq: ")
-        print(dq)
-        print(type(dq))
-        '''
-        #print(rad_cur[0])
-        #print(type(rad_cur[0]))
-        #print('this is dq: ')
-        #print(dq[0])
-        #print(type(dq[0]))
-        #rad_cur = (np.asmatrix(rad_cur) + dq).tolist()
-        #print(type(rad_cur))
-        #print(rad_cur)
-        #print("Iteration = " + str(iteration))
-        #print("this is rad_cur after addition: ")
-        #print(type(rad_cur[0]))
-        #print(type(rad_cur))
-        #print(rad_cur[0,0])
-        #print(type(rad_cur[0,0]))
         mat_cur = forward_kinematics(rad_cur[0,0],rad_cur[0,1],rad_cur[0,2],rad_cur[0,3],rad_cur[0,4],rad_cur[0,5])
         pos_cur = mat_cur[0:3,3]
         ori_cur = np.asmatrix(rotm2quat(mat_cur)).reshape(4,1)
@@ -290,21 +228,51 @@ def inverse_kinematics(mat_goal):
     if (iteration > 100):
         print("loop too many times")
 
-def move_joint_deg(target):
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[0],deg2rad(target[0]),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[1],deg2rad(target[1]),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[2],deg2rad(target[2]),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[3],deg2rad(target[3]),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[4],deg2rad(target[4]),vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[5],deg2rad(target[5]),vrep.simx_opmode_oneshot)
+''' robotic arm manipulations '''
 
-def move_joint_rad(target):
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[0],target[0],vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[1],target[1],vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[2],target[2],vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[3],target[3],vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[4],target[4],vrep.simx_opmode_oneshot)
-    vrep.simxSetJointTargetPosition(clientID,joint_handles[5],target[5],vrep.simx_opmode_oneshot)
+def move_joint_deg(target_angles):
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[0],deg2rad(target_angles[0]),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[1],deg2rad(target_angles[1]),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[2],deg2rad(target_angles[2]),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[3],deg2rad(target_angles[3]),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[4],deg2rad(target_angles[4]),vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[5],deg2rad(target_angles[5]),vrep.simx_opmode_oneshot)
+
+def move_joint_rad(target_angles):
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[0],target_angles[0],vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[1],target_angles[1],vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[2],target_angles[2],vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[3],target_angles[3],vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[4],target_angles[4],vrep.simx_opmode_oneshot)
+    vrep.simxSetJointTargetPosition(clientID,joint_handles[5],target_angles[5],vrep.simx_opmode_oneshot)
+
+''' path interpolation '''
+
+def lerp(current_pos_ori, goal_pos_ori):
+    current_pos = current_pos_ori[0:3,3]
+    goal_pos = goal_pos_ori[0:3,3]
+    velocity = 3e-03
+    error_matrix = goal_pos_ori - current_pos_ori
+    error_len = np.linalg.norm(error_matrix)
+    N = (error_len / velocity)+1
+    dx = (goal_pos[0] - current_pos[0]) / N
+    dy = (goal_pos[1] - current_pos[1]) / N
+    dz = (goal_pos[2] - current_pos[2]) / N
+    # orientation
+    Q1 = rotm2quat(current_pos_ori)
+    Q2 = rotm2quat(goal_pos_ori)
+    for i in range(1,int(N)):
+        t = i / N
+        current_pos_ori[0,3] = current_pos_ori[0,3] + dx
+        current_pos_ori[1,3] = current_pos_ori[1,3] + dy
+        current_pos_ori[2,3] = current_pos_ori[2,3] + dz
+        Qt = (1-t)*Q1 + t*Q2
+        rotm = quat2rotm(Qt)
+        current_pos_ori[0:3,0:3] = rotm
+        inverse_kinematics(current_pos_ori)
+    error_matrix = goal_pos_ori - current_pos_ori
+    error_len = np.linalg.norm(error_matrix)
+    return
 
 ''' bummy manipulations '''
 
@@ -347,39 +315,30 @@ def connect():
         print("Connected successful")
     else:
         raise Exception("Failed to connect")
-
     # start simulation
     vrep.simxStartSimulation(clientID, vrep.simx_opmode_oneshot)
-
     # get handles
     status, joint1_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint1',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of first joint")
-
     status, joint2_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint2',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of second joint")
-
     status, joint3_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint3',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of third joint")
-
     status, joint4_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint4',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fourth joint")
-
     status, joint5_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint5',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fifth joint")
-
     status, joint6_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint6',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of sixth joint")
-
     status, welding_torch_handle = vrep.simxGetObjectHandle(clientID, 'Welding_torch', vrep.simx_opmode_blocking)
     if status!= vrep.simx_return_ok:
     	raise Exception('Cannot get handle of end effector')
-
     # wrapping
     joint_handles = np.zeros(6, dtype=np.int)
     joint_handles[0] = joint1_handle
@@ -388,13 +347,34 @@ def connect():
     joint_handles[3] = joint4_handle
     joint_handles[4] = joint5_handle
     joint_handles[5] = joint6_handle
-
     # return
     return clientID, joint_handles, welding_torch_handle
 
-def disconnect(clientID):
+def disconnect():
     vrep.simxStopSimulation(clientID, vrep.simx_opmode_oneshot)
-    time.sleep(1)
+    vrep.simxGetPingTime(clientID)
     vrep.simxFinish(clientID)
 
 ''' helper functions '''
+
+def get_current_vector(object_handle):
+    # get
+    status, pos_cur = vrep.simxGetObjectPosition(clientID, object_handle, -1, vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+        raise Exception("Cannot get position of end effector")
+    status, ori_cur = vrep.simxGetObjectQuaternion(clientID, object_handle, -1, vrep.simx_opmode_blocking)
+    if status != vrep.simx_return_ok:
+        raise Exception("Cannot get orientation of end effector")
+    # reshape
+    vec_cur = np.vstack((np.asmatrix(pos_cur).reshape(3,1), np.asmatrix(ori_cur).reshape(4,1)))
+    return vec_cur
+
+def get_current_joints():
+    joint_angles = [0.0,0.0,0.0,0.0,0.0,0.0]
+    _, joint_angles[0] = vrep.simxGetJointPosition(clientID, joint_handles[0], vrep.simx_opmode_blocking)
+    _, joint_angles[1] = vrep.simxGetJointPosition(clientID, joint_handles[1], vrep.simx_opmode_blocking)
+    _, joint_angles[2] = vrep.simxGetJointPosition(clientID, joint_handles[2], vrep.simx_opmode_blocking)
+    _, joint_angles[3] = vrep.simxGetJointPosition(clientID, joint_handles[3], vrep.simx_opmode_blocking)
+    _, joint_angles[4] = vrep.simxGetJointPosition(clientID, joint_handles[4], vrep.simx_opmode_blocking)
+    _, joint_angles[5] = vrep.simxGetJointPosition(clientID, joint_handles[5], vrep.simx_opmode_blocking)
+    return joint_angles

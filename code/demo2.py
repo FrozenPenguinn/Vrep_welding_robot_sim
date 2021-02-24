@@ -100,4 +100,4 @@ Get_object_pos_ori_mat()
 print('Done2')
 
 # stop simulation and close connections
-disconnect(clientID)
+disconnect()

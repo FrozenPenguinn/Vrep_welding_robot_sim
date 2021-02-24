@@ -50,4 +50,4 @@ print(x)
 print('Done1')
 
 # stop simulation and close connections
-disconnect(clientID)
+disconnect()

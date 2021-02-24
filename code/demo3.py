@@ -366,4 +366,4 @@ time.sleep(1)
 print('Done3')
 
 # stop simulation and close connections
-disconnect(clientID)
+disconnect()
