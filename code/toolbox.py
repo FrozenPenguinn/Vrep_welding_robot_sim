@@ -20,7 +20,7 @@ import numpy.linalg as lg
 PI = math.pi
 d = np.array([0.089159,  0,      0,        0.10915,  0.09465,  0.0823])
 a = np.array([0,         0.425,  0.39225,  0,        0,        0])
-tool_length = 0.13
+tool_length = 0.23
 
 # ID and handles
 clientID = 0
@@ -212,7 +212,7 @@ def inverse_kinematics(mat_goal):
         if (lg.norm(vec_err) < 0.003):
             rad_cur = rad_cur.tolist()
             move_joint_rad(rad_cur[0])
-            print("Iteration = " + str(iteration))
+            #print("Iteration = " + str(iteration))
             break
         # iteration of joint angles through Jacobian
         rad_cur = rad_cur.tolist()
@@ -251,18 +251,20 @@ def move_joint_rad(target_angles):
 def lerp(current_pos_ori, goal_pos_ori):
     current_pos = current_pos_ori[0:3,3]
     goal_pos = goal_pos_ori[0:3,3]
-    velocity = 3e-03
+    velocity = 5e-03
     error_matrix = goal_pos_ori - current_pos_ori
     error_len = np.linalg.norm(error_matrix)
-    N = (error_len / velocity)+1
+    N = int((error_len / velocity)+1)
+    print("N in lerp = " + str(N))
     dx = (goal_pos[0] - current_pos[0]) / N
     dy = (goal_pos[1] - current_pos[1]) / N
     dz = (goal_pos[2] - current_pos[2]) / N
     # orientation
     Q1 = rotm2quat(current_pos_ori)
     Q2 = rotm2quat(goal_pos_ori)
-    for i in range(1,int(N)):
+    for i in range(1, N+1):
         t = i / N
+        print("Progress: " + str(format(100*t,".1f")) + "%")
         current_pos_ori[0,3] = current_pos_ori[0,3] + dx
         current_pos_ori[1,3] = current_pos_ori[1,3] + dy
         current_pos_ori[2,3] = current_pos_ori[2,3] + dz
@@ -272,6 +274,28 @@ def lerp(current_pos_ori, goal_pos_ori):
         inverse_kinematics(current_pos_ori)
     error_matrix = goal_pos_ori - current_pos_ori
     error_len = np.linalg.norm(error_matrix)
+    return
+
+def draw_circle(current_pos_ori, radius):
+    center_pos = current_pos_ori[0:3,3]
+    center_x = center_pos[0]
+    center_y = center_pos[1]
+    center_z = center_pos[2]
+    circumference = 2 * math.pi * radius
+    velocity = 5e-03
+    N = int((circumference / velocity)+1)
+    print("N in circle = " + str(N))
+    dtheta = 2 * math.pi / N
+    theta = 0
+    for t in range(0, N+1):
+        print("Progress: " + str(format(100*t,".1f")) + "%")
+        current_x = center_x + radius * math.cos(theta)
+        current_y = center_y + radius * math.sin(theta)
+        theta = theta + dtheta
+        current_pos_ori[0,3] = current_x
+        current_pos_ori[1,3] = current_y
+        inverse_kinematics(current_pos_ori)
+        time.sleep(0.02)
     return
 
 ''' bummy manipulations '''

@@ -13,7 +13,7 @@ joint_angle = np.zeros(6)
 pos_or_mat = np.zeros(12)
 euler = np.zeros(3)
 max_torque = 200
-tool_length = 0.13
+tool_length = 0.23
 
 # connect and get handles
 clientID, joint_handle, end_effector_handle = connect()

@@ -13,7 +13,7 @@ clientID, joint_handle, end_effector_handle = connect()
 current_angles = [0,0,0,0,0,0]
 goal_angles = np.zeros(6)
 dtheta = 0.001
-tool_length = 0.13
+tool_length = 0.23
 
 # Solving Ax=b
 def inverse_kinematics(pos_ori_mat):
@@ -340,14 +340,14 @@ pos_ori_mat = np.matrix([[0,   1,   0,   1.2235e-01],
                          [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat)
 inverse_kinematics(pos_ori_mat)
-
+'''
 pos_ori_mat = np.matrix([[0,   1,   0,  -1.2235e-01],
                          [1,   0,   0,   0.5000e-00],
                          [0,   0,  -1,   5.0000e-01],
                          [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat)
 inverse_kinematics(pos_ori_mat)
-
+'''
 pos_ori_mat = np.matrix([[0,   1,   0,  -1.2235e-01],
                          [1,   0,   0,   0.5000e-00],
                          [0,   0,  -1,   3.0000e-01],

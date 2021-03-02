@@ -13,7 +13,7 @@ clientID, joint_handle, end_effector_handle = connect()
 current_angles = [0,0,0,0,0,0]
 goal_angles = np.zeros(6)
 dtheta = 0.001
-tool_length = 0.13
+tool_length = 0.23
 
 # Solving Ax=b
 def inverse_kinematics(pos_ori_mat):
@@ -191,7 +191,7 @@ def lerp_beta(current_pos_ori, goal_pos_ori):
     error_matrix = goal_pos_ori - current_pos_ori
     error_len = np.linalg.norm(error_matrix)
     N = (error_len / velocity)+1
-    #print("N is: " + str(N))
+    print("N is: " + str(N))
     #print("this is N: "+str(N))
     dx = (goal_pos[0] - current_pos[0]) / N
     dy = (goal_pos[1] - current_pos[1]) / N
@@ -325,18 +325,6 @@ current_mat = np.matrix([[0,   0,   -1,   -3.2235e-01],
 #time.sleep(2)
 
 
-'''
-pos_ori_mat_0 = np.matrix([[0,   0,   -1,   -5.2235e-01],
-                           [-1,   0,   0,   -7.3685e-05],
-                           [0,   1,   0,   +1.0012e+00],
-                           [0,   0,   0,   1         ]])
-set_goal(pos_ori_mat_0)
-#time.sleep(3)
-#inverse_kinematics(pos_ori_mat_0)
-lerp(current_mat, pos_ori_mat_0)
-time.sleep(1)
-'''
-
 pos_ori_mat_1 = np.matrix([[0,   1,   0,   1.2235e-01],
                            [0,   0,   1,   0.6000e-00],
                            [1,   0,   0,   6.0000e-01],
@@ -366,7 +354,7 @@ lerp_beta(pos_ori_mat_12, pos_ori_mat_2)
 
 pos_ori_mat_3 = np.matrix([[0,   1,   0,  -1.2235e-01],
                            [1,   0,   0,   0.4000e-00],
-                           [0,   0,  -1,   3.0000e-01],
+                           [0,   0,  -1,   0.0000e-02],
                            [0,   0,   0,   1         ]])
 set_goal(pos_ori_mat_3)
 #print("goal: ")
@@ -375,12 +363,20 @@ lerp_beta(pos_ori_mat_2,pos_ori_mat_3)
 time.sleep(0.5)
 draw_circle(pos_ori_mat_3, 2.0000e-02)
 
+pos_ori_mat_4 = np.matrix([[0,   1,   0,  -1.2235e-01],
+                           [1,   0,   0,   0.4000e-00],
+                           [0,   0,  -1,   2.0000e-01],
+                           [0,   0,   0,   1         ]])
+set_goal(pos_ori_mat_4)
+#print("goal: ")
+#print(pos_ori_mat_3)
+lerp_beta(pos_ori_mat_3,pos_ori_mat_4)
 '''
 pos_ori_mat_4 = np.matrix([[0,   1,   0,  -1.2235e-01],
                            [1,   0,   0,   0.7000e-00],
                            [0,   0,  -1,   3.0000e-01],
                            [0,   0,   0,   1         ]])
-'''
+
 pos_ori_mat_4 = np.matrix([[0,   1,   0,  -1.2235e-01],
                            [0,   0,   1,   0.7000e-00],
                            [1,   0,   0,   3.0000e-01],
@@ -397,10 +393,10 @@ lerp_beta(pos_ori_mat_3,pos_ori_mat_5)
 
 set_goal(pos_ori_mat_2)
 lerp_beta(pos_ori_mat_5,pos_ori_mat_2)
-
+'''
 time.sleep(1)
 
 print('Done3')
 
 # stop simulation and close connections
-disconnect()
+#disconnect()
