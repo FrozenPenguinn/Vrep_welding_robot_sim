@@ -25,25 +25,29 @@ pos_ori_mat_3 = np.matrix([[0,   1,   0,  -1.2235e-01],
                            [1,   0,   0,   0.5000e-00],
                            [0,   0,  -1,   2.0000e-01],
                            [0,   0,   0,   1         ]])
-set_goal(pos_ori_mat_1)
+#set_goal(pos_ori_mat_1)
 #jacobian(goal)
 inverse_kinematics(pos_ori_mat_1)
 
 
-set_goal(pos_ori_mat_2)
+# first do calculuations, then execute according to real time
+
+#set_goal(pos_ori_mat_2)
 start = time.time()
 lerp(pos_ori_mat_1,pos_ori_mat_2)
 end = time.time()
 time_dif = end - start
-print("time difference: " + str(time_dif))
+print("time used: " + str(time_dif))
 time.sleep(0.5)
 
 draw_circle(pos_ori_mat_2, 5.0000e-02)
 time.sleep(0.5)
 
-set_goal(pos_ori_mat_3)
+#set_goal(pos_ori_mat_3)
 inverse_kinematics(pos_ori_mat_3)
 time.sleep(1)
 
 print("demo 5 done!")
-#disconnect()
+
+if (input("Press any key to quit: ") != "@"):
+    disconnect()

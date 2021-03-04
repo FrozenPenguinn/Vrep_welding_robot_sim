@@ -286,24 +286,35 @@ def draw_circle(current_pos_ori, radius):
     center_x = center_pos[0].copy() # 注意深浅复制的区别
     center_y = center_pos[1].copy()
     center_z = center_pos[2].copy()
-    print("x: " + str(center_x))
-    print("y: " + str(center_y))
-    print("z: " + str(center_z))
+    #print("x: " + str(center_x))
+    #print("y: " + str(center_y))
+    #print("z: " + str(center_z))
     circumference = 2 * math.pi * radius
     velocity = 5e-2 / 20 # 1cm/s divided into 50ms steps
     N = int((circumference / velocity)+1)
     print("N in circle = " + str(N))
     dtheta = 2 * math.pi / N
     theta = 0
-    for i in range(0, N+1):
+    # move from center of circle to side
+    side_pos_ori = current_pos_ori.copy()
+    side_pos_ori[2,3] = side_pos_ori[2,3] + 0.05
+    inverse_kinematics(side_pos_ori)
+    time.sleep(0.5)
+    side_pos_ori[0,3] = side_pos_ori[0,3] + radius
+    inverse_kinematics(side_pos_ori)
+    time.sleep(0.5)
+    side_pos_ori[2,3] = side_pos_ori[2,3] - 0.05
+    inverse_kinematics(side_pos_ori)
+    time.sleep(0.5)
+    for i in range(1, N+1):
         t = i / N
         print("Progress: " + str(format(100*t,".1f")) + "%")
-        print("radius: " + str(radius))
-        print("theta: " + str(theta))
+        #print("radius: " + str(radius))
+        #print("theta: " + str(theta))
         current_x = center_x + radius * math.cos(theta)
         current_y = center_y + radius * math.sin(theta)
-        print("current_x : " + str(current_x))
-        print("current_y : " + str(current_y))
+        #print("current_x : " + str(current_x))
+        #print("current_y : " + str(current_y))
         theta = theta + dtheta
         current_pos_ori[0,3] = current_x
         current_pos_ori[1,3] = current_y
@@ -420,5 +431,4 @@ def get_current_joints():
     time_dif = end - start
     wait_time = wait_time + time_dif
     print("this is time spent waiting: " + str(wait_time))
-
     return joint_angles
