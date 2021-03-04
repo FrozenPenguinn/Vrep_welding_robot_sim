@@ -20,7 +20,9 @@ import numpy.linalg as lg
 PI = math.pi
 d = np.array([0.089159,  0,      0,        0.10915,  0.09465,  0.0823])
 a = np.array([0,         0.425,  0.39225,  0,        0,        0])
+joint_angles = [0.0,0.0,0.0,0.0,0.0,0.0]
 tool_length = 0.23
+wait_time = 0
 
 # ID and handles
 clientID = 0
@@ -200,7 +202,7 @@ def jacobian(rads):
 def inverse_kinematics(mat_goal):
     iteration = 0
     # current cartesian position and quaternion orientation vector from get_current_vector
-    rad_cur = np.asmatrix(get_current_joints())
+    rad_cur = np.asmatrix(joint_angles)
     vec_cur = get_current_vector(welding_torch_handle)
     # goal matrix to cartesian position and quaternion orientation vector
     pos_goal = mat_goal[0:3,3]
@@ -237,6 +239,7 @@ def move_joint_deg(target_angles):
     vrep.simxSetJointTargetPosition(clientID,joint_handles[3],deg2rad(target_angles[3]),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handles[4],deg2rad(target_angles[4]),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handles[5],deg2rad(target_angles[5]),vrep.simx_opmode_oneshot)
+    joint_angles = target_angles
 
 def move_joint_rad(target_angles):
     vrep.simxSetJointTargetPosition(clientID,joint_handles[0],target_angles[0],vrep.simx_opmode_oneshot)
@@ -245,13 +248,14 @@ def move_joint_rad(target_angles):
     vrep.simxSetJointTargetPosition(clientID,joint_handles[3],target_angles[3],vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handles[4],target_angles[4],vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handles[5],target_angles[5],vrep.simx_opmode_oneshot)
+    joint_angles = target_angles
 
 ''' path interpolation '''
 
 def lerp(current_pos_ori, goal_pos_ori):
     current_pos = current_pos_ori[0:3,3]
     goal_pos = goal_pos_ori[0:3,3]
-    velocity = 5e-03
+    velocity = 5e-2 / 20 # 1cm/s divided into 50ms steps
     error_matrix = goal_pos_ori - current_pos_ori
     error_len = np.linalg.norm(error_matrix)
     N = int((error_len / velocity)+1)
@@ -277,20 +281,29 @@ def lerp(current_pos_ori, goal_pos_ori):
     return
 
 def draw_circle(current_pos_ori, radius):
+    # velocity should be set in meters per second, then converted to distance per 50ms(step in simulation)
     center_pos = current_pos_ori[0:3,3]
-    center_x = center_pos[0]
-    center_y = center_pos[1]
-    center_z = center_pos[2]
+    center_x = center_pos[0].copy() # 注意深浅复制的区别
+    center_y = center_pos[1].copy()
+    center_z = center_pos[2].copy()
+    print("x: " + str(center_x))
+    print("y: " + str(center_y))
+    print("z: " + str(center_z))
     circumference = 2 * math.pi * radius
-    velocity = 5e-03
+    velocity = 5e-2 / 20 # 1cm/s divided into 50ms steps
     N = int((circumference / velocity)+1)
     print("N in circle = " + str(N))
     dtheta = 2 * math.pi / N
     theta = 0
-    for t in range(0, N+1):
+    for i in range(0, N+1):
+        t = i / N
         print("Progress: " + str(format(100*t,".1f")) + "%")
+        print("radius: " + str(radius))
+        print("theta: " + str(theta))
         current_x = center_x + radius * math.cos(theta)
         current_y = center_y + radius * math.sin(theta)
+        print("current_x : " + str(current_x))
+        print("current_y : " + str(current_y))
         theta = theta + dtheta
         current_pos_ori[0,3] = current_x
         current_pos_ori[1,3] = current_y
@@ -394,6 +407,8 @@ def get_current_vector(object_handle):
     return vec_cur
 
 def get_current_joints():
+    global wait_time
+    start = time.time()
     joint_angles = [0.0,0.0,0.0,0.0,0.0,0.0]
     _, joint_angles[0] = vrep.simxGetJointPosition(clientID, joint_handles[0], vrep.simx_opmode_blocking)
     _, joint_angles[1] = vrep.simxGetJointPosition(clientID, joint_handles[1], vrep.simx_opmode_blocking)
@@ -401,4 +416,9 @@ def get_current_joints():
     _, joint_angles[3] = vrep.simxGetJointPosition(clientID, joint_handles[3], vrep.simx_opmode_blocking)
     _, joint_angles[4] = vrep.simxGetJointPosition(clientID, joint_handles[4], vrep.simx_opmode_blocking)
     _, joint_angles[5] = vrep.simxGetJointPosition(clientID, joint_handles[5], vrep.simx_opmode_blocking)
+    end = time.time()
+    time_dif = end - start
+    wait_time = wait_time + time_dif
+    print("this is time spent waiting: " + str(wait_time))
+
     return joint_angles
