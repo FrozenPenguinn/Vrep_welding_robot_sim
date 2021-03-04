@@ -21,22 +21,22 @@ def connect():
     # start simulation
     vrep.simxStartSimulation(clientID, vrep.simx_opmode_oneshot)
     # get handles
-    res, joint_handles[0] = vrep.simxGetObjectHandle(clientID, 'UR5_joint1',vrep.simx_opmode_blocking)
+    res, joint_handles[0] = vrep.simxGetObjectHandle(clientID, 'UR5_joint1', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of first joint")
-    res, joint_handles[1] = vrep.simxGetObjectHandle(clientID, 'UR5_joint2',vrep.simx_opmode_blocking)
+    res, joint_handles[1] = vrep.simxGetObjectHandle(clientID, 'UR5_joint2', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of second joint")
-    res, joint_handles[2] = vrep.simxGetObjectHandle(clientID, 'UR5_joint3',vrep.simx_opmode_blocking)
+    res, joint_handles[2] = vrep.simxGetObjectHandle(clientID, 'UR5_joint3', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of third joint")
-    res, joint_handles[3] = vrep.simxGetObjectHandle(clientID, 'UR5_joint4',vrep.simx_opmode_blocking)
+    res, joint_handles[3] = vrep.simxGetObjectHandle(clientID, 'UR5_joint4', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fourth joint")
-    res, joint_handles[4] = vrep.simxGetObjectHandle(clientID, 'UR5_joint5',vrep.simx_opmode_blocking)
+    res, joint_handles[4] = vrep.simxGetObjectHandle(clientID, 'UR5_joint5', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fifth joint")
-    res, joint_handles[5] = vrep.simxGetObjectHandle(clientID, 'UR5_joint6',vrep.simx_opmode_blocking)
+    res, joint_handles[5] = vrep.simxGetObjectHandle(clientID, 'UR5_joint6', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of sixth joint")
     res, welding_torch_handle = vrep.simxGetObjectHandle(clientID, 'Welding_torch', vrep.simx_opmode_blocking)
@@ -46,8 +46,11 @@ def connect():
     return clientID, joint_handles, welding_torch_handle
 
 def disconnect():
+    # stop simulation
     vrep.simxStopSimulation(clientID, vrep.simx_opmode_oneshot)
-    vrep.simxGetPingTime(clientID) # make sure StopSimulation arrives
+    # make sure StopSimulation arrives
+    vrep.simxGetPingTime(clientID)
+    # disconnect from vrep server
     vrep.simxFinish(clientID)
 
 # move six joints at once
