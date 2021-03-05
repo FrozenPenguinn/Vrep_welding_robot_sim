@@ -213,7 +213,7 @@ def inverse_kinematics(mat_goal):
         vec_err = vec_goal - vec_cur
         if (lg.norm(vec_err) < 0.003):
             rad_cur = rad_cur.tolist()
-            move_joint_rad(rad_cur[0])
+            set_joints_rad(rad_cur[0])
             #print("Iteration = " + str(iteration))
             break
         # iteration of joint angles through Jacobian
@@ -232,7 +232,7 @@ def inverse_kinematics(mat_goal):
 
 ''' robotic arm manipulations '''
 
-def move_joint_deg(target_angles):
+def set_joints_deg(target_angles):
     vrep.simxSetJointTargetPosition(clientID,joint_handles[0],deg2rad(target_angles[0]),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handles[1],deg2rad(target_angles[1]),vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handles[2],deg2rad(target_angles[2]),vrep.simx_opmode_oneshot)
@@ -241,7 +241,7 @@ def move_joint_deg(target_angles):
     vrep.simxSetJointTargetPosition(clientID,joint_handles[5],deg2rad(target_angles[5]),vrep.simx_opmode_oneshot)
     joint_angles = target_angles
 
-def move_joint_rad(target_angles):
+def set_joints_rad(target_angles):
     vrep.simxSetJointTargetPosition(clientID,joint_handles[0],target_angles[0],vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handles[1],target_angles[1],vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID,joint_handles[2],target_angles[2],vrep.simx_opmode_oneshot)

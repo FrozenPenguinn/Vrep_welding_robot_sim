@@ -54,7 +54,7 @@ def disconnect():
     vrep.simxFinish(clientID)
 
 # move six joints at once
-def move_to_joint_position(a0, a1, a2, a3, a4, a5):
+def set_joints_deg(a0, a1, a2, a3, a4, a5):
     vrep.simxSetJointTargetPosition(clientID, joint_handles[0], deg2rad(a0), vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID, joint_handles[1], deg2rad(a1), vrep.simx_opmode_oneshot)
     vrep.simxSetJointTargetPosition(clientID, joint_handles[2], deg2rad(a2), vrep.simx_opmode_oneshot)
@@ -75,7 +75,7 @@ def main():
                             [  0,  0,   0,   0,  0,  0]])
     # execution
     for i in range(0,np.size(motion_plan,0)):
-        move_to_joint_position(motion_plan[i,0],motion_plan[i,1],motion_plan[i,2],motion_plan[i,3],motion_plan[i,4],motion_plan[i,5])
+        set_joints_deg(motion_plan[i,0],motion_plan[i,1],motion_plan[i,2],motion_plan[i,3],motion_plan[i,4],motion_plan[i,5])
         time.sleep(1)
     # disconnect
     disconnect()
