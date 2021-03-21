@@ -20,7 +20,7 @@ import numpy.linalg as lg
 PI = math.pi
 d = np.array([0.089159,  0,      0,        0.10915,  0.09465,  0.0823])
 a = np.array([0,         0.425,  0.39225,  0,        0,        0])
-joint_angles = [0.0,0.0,0.0,0.0,0.0,0.0]
+joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 tool_length = 0.23
 wait_time = 0
 

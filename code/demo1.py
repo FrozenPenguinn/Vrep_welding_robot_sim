@@ -21,22 +21,22 @@ def connect():
     # start simulation
     vrep.simxStartSimulation(clientID, vrep.simx_opmode_oneshot)
     # get handles
-    res, joint_handles[0] = vrep.simxGetObjectHandle(clientID, 'UR5_joint1', vrep.simx_opmode_blocking)
+    res, joint_handles[0] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint1', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of first joint")
-    res, joint_handles[1] = vrep.simxGetObjectHandle(clientID, 'UR5_joint2', vrep.simx_opmode_blocking)
+    res, joint_handles[1] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint2', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of second joint")
-    res, joint_handles[2] = vrep.simxGetObjectHandle(clientID, 'UR5_joint3', vrep.simx_opmode_blocking)
+    res, joint_handles[2] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint3', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of third joint")
-    res, joint_handles[3] = vrep.simxGetObjectHandle(clientID, 'UR5_joint4', vrep.simx_opmode_blocking)
+    res, joint_handles[3] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint4', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fourth joint")
-    res, joint_handles[4] = vrep.simxGetObjectHandle(clientID, 'UR5_joint5', vrep.simx_opmode_blocking)
+    res, joint_handles[4] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint5', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fifth joint")
-    res, joint_handles[5] = vrep.simxGetObjectHandle(clientID, 'UR5_joint6', vrep.simx_opmode_blocking)
+    res, joint_handles[5] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint6', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of sixth joint")
     res, welding_torch_handle = vrep.simxGetObjectHandle(clientID, 'Welding_torch', vrep.simx_opmode_blocking)
@@ -70,13 +70,13 @@ def main():
     # connect
     clientID, joint_handles, _ = connect()
     # plan for joint angles to follow
-    motion_plan = np.array([[ 90, 90, -90,  90, 90, 90],
-                            [-90, 45,  90, 135, 90, 90],
+    motion_plan = np.array([[ 90, 45,   0,   0,  0,  0],
+                            [-90,-30,   0,   0,  0,  0],
                             [  0,  0,   0,   0,  0,  0]])
     # execution
     for i in range(0,np.size(motion_plan,0)):
         set_joints_deg(motion_plan[i,0],motion_plan[i,1],motion_plan[i,2],motion_plan[i,3],motion_plan[i,4],motion_plan[i,5])
-        time.sleep(1)
+        time.sleep(3)
     # disconnect
     disconnect()
 
