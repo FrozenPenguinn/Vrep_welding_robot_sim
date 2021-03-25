@@ -366,22 +366,22 @@ def connect():
     # start simulation
     vrep.simxStartSimulation(clientID, vrep.simx_opmode_oneshot)
     # get handles
-    status, joint1_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint1',vrep.simx_opmode_blocking)
+    status, joint1_handle = vrep.simxGetObjectHandle(clientID, 'Kuka_joint1',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of first joint")
-    status, joint2_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint2',vrep.simx_opmode_blocking)
+    status, joint2_handle = vrep.simxGetObjectHandle(clientID, 'Kuka_joint2',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of second joint")
-    status, joint3_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint3',vrep.simx_opmode_blocking)
+    status, joint3_handle = vrep.simxGetObjectHandle(clientID, 'Kuka_joint3',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of third joint")
-    status, joint4_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint4',vrep.simx_opmode_blocking)
+    status, joint4_handle = vrep.simxGetObjectHandle(clientID, 'Kuka_joint4',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fourth joint")
-    status, joint5_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint5',vrep.simx_opmode_blocking)
+    status, joint5_handle = vrep.simxGetObjectHandle(clientID, 'Kuka_joint5',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fifth joint")
-    status, joint6_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint6',vrep.simx_opmode_blocking)
+    status, joint6_handle = vrep.simxGetObjectHandle(clientID, 'Kuka_joint6',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of sixth joint")
     status, welding_torch_handle = vrep.simxGetObjectHandle(clientID, 'Welding_torch', vrep.simx_opmode_blocking)
