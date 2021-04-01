@@ -15,7 +15,7 @@ from toolbox import rotm2euler
 d = np.array([   0.4041,  0.2770,  0.03502, -0.12597,  -0.18531,  -0.08380])
 a = np.array([   0.0159,  0.2679,  0.67999,  0.48178,   0.08127,   0.16293])
 alp = np.array([ 0.0000,  1.3277, -1.55559,  3.09485,   3.14159,   3.16125])
-tool_length = 0.23
+tool_length = 0.18
 clientID = 0
 
 # frame transformation
@@ -63,10 +63,10 @@ def T56(rad):
 
 # from joint 6 to weolding torch
 def T6t(tool_length):
-    mat = np.matrix([[1,   0,   0,   0           ],
-                     [0,   1,   0,   0           ],
-                     [0,   0,   1,   tool_length ],
-                     [0,   0,   0,   1           ]])
+    mat = np.matrix([[-1,   0,    0,   0           ],
+                     [ 0,   1,    0,   0           ],
+                     [ 0,   0,   -1,  -tool_length ],
+                     [ 0,   0,    0,   1           ]])
     return mat
 
 
@@ -83,7 +83,7 @@ def forward_kinematics(deg1, deg2, deg3, deg4, deg5, deg6):
     Tmat_56 = T56(theta[5])
     Tmat_6t = T6t(tool_length)
     # combine
-    T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56
+    T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
     # T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
     # move dummy to tool location to verify accuracy of forward kinematics
     move_dummy(T)
