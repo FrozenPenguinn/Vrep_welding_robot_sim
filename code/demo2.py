@@ -12,32 +12,32 @@ from toolbox import rotm2euler
 # d = np.array([ 0.089159,  0,      0,        0.10915,  0.09465,  0.0823])
 # a = np.array([ 0,         0.425,  0.39225,  0,        0,        0     ])
 # initialize and Kuka DH parameters
-d = np.array([   0.4041,  0.2770,  0.03502, -0.12597,  0.09465,  0.0823])
-a = np.array([   0.0159,  0.2679,  0.67999,  0.48178,        0,        0     ])
-alp = np.array([ 0,       1.3277, -1.55559, -0.04674, 0, 0])
+d = np.array([   0.4041,  0.2770,  0.03502, -0.12597,  -0.18531,  -0.08380])
+a = np.array([   0.0159,  0.2679,  0.67999,  0.48178,   0.08127,   0.16293])
+alp = np.array([ 0.0000,  1.3277, -1.55559,  3.09485,   3.14159,   3.16125])
 tool_length = 0.23
 clientID = 0
 
 # frame transformation
 def T01(rad):
-    mat = np.matrix([[cos(rad),  -sin(rad),   0,   0   ],
-                     [sin(rad),   cos(rad),   0,   a[0]],
-                     [0,          0,          1,   d[0]],
-                     [0,          0,          0,   1   ]])
+    mat = np.matrix([[ cos(rad),  -sin(rad),   0,   0   ],
+                     [ sin(rad),   cos(rad),   0,   a[0]],
+                     [ 0,          0,          1,   d[0]],
+                     [ 0,          0,          0,   1   ]])
     return mat
 
 def T12(rad):
-    mat = np.matrix([[ 0,          0,          1,   a[1]*cos(rad + alp[1])],
-                     [-cos(rad),  -sin(rad),   0,   a[1]*sin(rad + alp[1])],
-                     [-sin(rad),  -cos(rad),   0,   d[1]                  ],
-                     [ 0,          0,          0,   1                     ]])
+    mat = np.matrix([[  0,          0,          1,   a[1]*cos(rad + alp[1])],
+                     [ -cos(rad),  -sin(rad),   0,   a[1]*sin(rad + alp[1])],
+                     [ -sin(rad),  -cos(rad),   0,   d[1]                  ],
+                     [  0,          0,          0,   1                     ]])
     return mat
 
 def T23(rad):
-    mat = np.matrix([[cos(rad),  -sin(rad),   0,   a[2]*cos(rad + alp[2])],
-                     [sin(rad),   cos(rad),   0,   a[2]*sin(rad + alp[2])],
-                     [0,          0,          1,   d[2]                  ],
-                     [0,          0,          0,   1                     ]])
+    mat = np.matrix([[ cos(rad),  -sin(rad),   0,   a[2]*cos(rad + alp[2])],
+                     [ sin(rad),   cos(rad),   0,   a[2]*sin(rad + alp[2])],
+                     [ 0,          0,          1,   d[2]                  ],
+                     [ 0,          0,          0,   1                     ]])
     return mat
 
 def T34(rad):
@@ -48,17 +48,17 @@ def T34(rad):
     return mat
 
 def T45(rad):
-    mat = np.matrix([[0,  -sin(rad),  -cos(rad),   0   ],
-                     [0,   cos(rad),  -sin(rad),   0   ],
-                     [1,   0,               0,               d[4]],
-                     [0,   0,               0,               1   ]])
+    mat = np.matrix([[ 0,          0,         -1,   a[4]*cos(rad + alp[4])],
+                     [ sin(rad),   cos(rad),   0,   a[4]*sin(rad + alp[4])],
+                     [ cos(rad),  -sin(rad),   0,   d[4]                  ],
+                     [ 0,          0,          0,   1                     ]])
     return mat
 
 def T56(rad):
-    mat = np.matrix([[cos(rad),  -sin(rad),   0,   0   ],
-                     [sin(rad),   cos(rad),   0,   0   ],
-                     [0,               0,               1,   d[5]],
-                     [0,               0,               0,   1   ]])
+    mat = np.matrix([[  0,          0,          1,   a[5]*cos(rad + alp[5])],
+                     [  sin(rad),   cos(rad),   0,   a[5]*sin(rad + alp[5])],
+                     [ -cos(rad),   sin(rad),   0,   d[5]                  ],
+                     [  0,          0,          0,   1                     ]])
     return mat
 
 # from joint 6 to weolding torch
@@ -83,7 +83,7 @@ def forward_kinematics(deg1, deg2, deg3, deg4, deg5, deg6):
     Tmat_56 = T56(theta[5])
     Tmat_6t = T6t(tool_length)
     # combine
-    T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34
+    T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56
     # T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
     # move dummy to tool location to verify accuracy of forward kinematics
     move_dummy(T)
