@@ -12,50 +12,51 @@ from toolbox import rotm2euler
 # d = np.array([ 0.089159,  0,      0,        0.10915,  0.09465,  0.0823])
 # a = np.array([ 0,         0.425,  0.39225,  0,        0,        0     ])
 # initialize and Kuka DH parameters
-d = np.array([ 0.4041,    0.2770,      0,        0.10915,  0.09465,  0.0823])
-a = np.array([ 0.0159,    0.425,  0.39225,  0,        0,        0     ])
+d = np.array([   0.4041,  0.2770,  0.03502, -0.12597,  0.09465,  0.0823])
+a = np.array([   0.0159,  0.2679,  0.67999,  0.48178,        0,        0     ])
+alp = np.array([ 0,       1.3277, -1.55559, -0.04674, 0, 0])
 tool_length = 0.23
 clientID = 0
 
 # frame transformation
 def T01(rad):
-    mat = np.matrix([[math.cos(rad),  -math.sin(rad),   0,   0      ],
-                     [math.sin(rad),   math.cos(rad),   0,   a[0]   ],
-                     [0,               0,               1,   d[0]   ],
-                     [0,               0,               0,   1      ]])
+    mat = np.matrix([[cos(rad),  -sin(rad),   0,   0   ],
+                     [sin(rad),   cos(rad),   0,   a[0]],
+                     [0,          0,          1,   d[0]],
+                     [0,          0,          0,   1   ]])
     return mat
 
 def T12(rad):
-    mat = np.matrix([[ 0,               0,               1,   a[1]*math.cos(rad)],
-                     [-math.cos(rad),  -math.sin(rad),   0,   a[1]*math.sin(rad)],
-                     [-math.sin(rad),  -math.cos(rad),   0,   d[1]              ],
-                     [ 0,               0,               0,   1                 ]])
+    mat = np.matrix([[ 0,          0,          1,   a[1]*cos(rad + alp[1])],
+                     [-cos(rad),  -sin(rad),   0,   a[1]*sin(rad + alp[1])],
+                     [-sin(rad),  -cos(rad),   0,   d[1]                  ],
+                     [ 0,          0,          0,   1                     ]])
     return mat
 
 def T23(rad):
-    mat = np.matrix([[math.cos(rad),  -math.sin(rad),   0,   a[2]*math.cos(rad)],
-                     [math.sin(rad),   math.cos(rad),   0,   a[2]*math.sin(rad)],
-                     [0,               0,               1,   0                 ],
-                     [0,               0,               0,   1                 ]])
+    mat = np.matrix([[cos(rad),  -sin(rad),   0,   a[2]*cos(rad + alp[2])],
+                     [sin(rad),   cos(rad),   0,   a[2]*sin(rad + alp[2])],
+                     [0,          0,          1,   d[2]                  ],
+                     [0,          0,          0,   1                     ]])
     return mat
 
 def T34(rad):
-    mat = np.matrix([[ 0,  -math.sin(rad),  math.cos(rad),   0   ],
-                     [ 0,   math.cos(rad),  math.sin(rad),   0   ],
-                     [-1,   0,              0,               d[3]],
-                     [ 0,   0,              0,               1   ]])
+    mat = np.matrix([[ 0,          0,          1,   a[3]*cos(rad + alp[3])],
+                     [ cos(rad),   sin(rad),   0,   a[3]*sin(rad + alp[3])],
+                     [ sin(rad),   cos(rad),   0,   d[3]                  ],
+                     [ 0,          0,          0,   1                     ]])
     return mat
 
 def T45(rad):
-    mat = np.matrix([[0,  -math.sin(rad),  -math.cos(rad),   0   ],
-                     [0,   math.cos(rad),  -math.sin(rad),   0   ],
+    mat = np.matrix([[0,  -sin(rad),  -cos(rad),   0   ],
+                     [0,   cos(rad),  -sin(rad),   0   ],
                      [1,   0,               0,               d[4]],
                      [0,   0,               0,               1   ]])
     return mat
 
 def T56(rad):
-    mat = np.matrix([[math.cos(rad),  -math.sin(rad),   0,   0   ],
-                     [math.sin(rad),   math.cos(rad),   0,   0   ],
+    mat = np.matrix([[cos(rad),  -sin(rad),   0,   0   ],
+                     [sin(rad),   cos(rad),   0,   0   ],
                      [0,               0,               1,   d[5]],
                      [0,               0,               0,   1   ]])
     return mat
@@ -82,7 +83,7 @@ def forward_kinematics(deg1, deg2, deg3, deg4, deg5, deg6):
     Tmat_56 = T56(theta[5])
     Tmat_6t = T6t(tool_length)
     # combine
-    T = Tmat_01 * Tmat_12
+    T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34
     # T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
     # move dummy to tool location to verify accuracy of forward kinematics
     move_dummy(T)
@@ -100,7 +101,7 @@ def move_dummy(T):
     res, dummy_handle = vrep.simxGetObjectHandle(clientID, 'Dummy', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
     	raise Exception('Cannot get handle of dummy')
-    time.sleep(1)
+    sleep(1)
     # create dummy
     res = vrep.simxSetObjectPosition(clientID, dummy_handle, -1,translation_mat, vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
@@ -108,7 +109,7 @@ def move_dummy(T):
     res = vrep.simxSetObjectOrientation(clientID, dummy_handle, -1, euler, vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
     	raise Exception('Cannot get orientation of dummy')
-    time.sleep(1)
+    sleep(1)
 
 def main():
     # connect
@@ -124,7 +125,7 @@ def main():
     for i in range(0,np.size(motion_plan,0)):
         set_joints_deg(np.array([motion_plan[i,0], motion_plan[i,1], motion_plan[i,2], motion_plan[i,3], motion_plan[i,4], motion_plan[i,5]]))
         forward_kinematics(motion_plan[i,0], motion_plan[i,1], motion_plan[i,2], motion_plan[i,3], motion_plan[i,4], motion_plan[i,5])
-        time.sleep(1)
+        sleep(1)
     # disconnect
     # disconnect()
 
