@@ -397,6 +397,7 @@ def connect():
     joint_handles[5] = joint6_handle
     # return
     return clientID, joint_handles, welding_torch_handle
+    
 '''
 def connect():
     # declare global
@@ -449,7 +450,7 @@ def connect():
 
 def disconnect():
     vrep.simxStopSimulation(clientID, vrep.simx_opmode_oneshot)
-    vrep.simxGetPingTime(clientID)
+    time.sleep(1)
     vrep.simxFinish(clientID)
 
 ''' helper functions '''

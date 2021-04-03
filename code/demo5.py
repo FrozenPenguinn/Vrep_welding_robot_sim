@@ -49,5 +49,5 @@ time.sleep(1)
 
 print("demo 5 done!")
 
-if (input("Press any key to quit: ") != "@"):
+if (input("Press any key to quit: ") != '|'):
     disconnect()

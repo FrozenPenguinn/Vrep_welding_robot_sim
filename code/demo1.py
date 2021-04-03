@@ -78,7 +78,8 @@ def main():
         set_joints_deg(motion_plan[i,0],motion_plan[i,1],motion_plan[i,2],motion_plan[i,3],motion_plan[i,4],motion_plan[i,5])
         time.sleep(3)
     # disconnect
-    disconnect()
+    if (input("Press any key to quit: ") != '|'):
+        disconnect()
 
 if __name__ == "__main__":
     main()
