@@ -397,7 +397,7 @@ def connect():
     joint_handles[5] = joint6_handle
     # return
     return clientID, joint_handles, welding_torch_handle
-    
+
 '''
 def connect():
     # declare global

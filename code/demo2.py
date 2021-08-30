@@ -41,17 +41,17 @@ def T23(rad):
     return mat
 
 def T34(rad):
-    mat = np.matrix([[ -cos(rad),   0,     -sin(rad),   a[3]*cos(rad + alp[3])],
-                     [ -sin(rad),   0,      cos(rad),   a[3]*sin(rad + alp[3])],
-                     [  0,          1,      0,          d[3]                  ],
-                     [  0,          0,      0,          1                     ]])
+    mat = np.matrix([[ -sin(rad),  -cos(rad),      0,   a[3]*cos(alp[3])],
+                     [  0,          0,            -1,   a[3]*sin(alp[3])],
+                     [  cos(rad),  -sin(rad),      0,   d[3]            ],
+                     [  0,          0,             0,   1               ]])
     return mat
 
 def T45(rad):
-    mat = np.matrix([[ -sin(rad),   0,    cos(rad),    a[4]*cos(rad + alp[4])],
-                     [  0,          1,    0,           a[4]*sin(rad + alp[4])],
-                     [ -cos(rad),   0,   -sin(rad),    d[4]                  ],
-                     [  0,          0,    0,           1                     ]])
+    mat = np.matrix([[  sin(rad),   cos(rad),    0,    a[4]*cos(alp[4])],
+                     [  0,          0,           1,    a[4]*sin(alp[4])],
+                     [  cos(rad),  -sin(rad),    0,    d[4]            ],
+                     [  0,          0,           0,    1               ]])
     return mat
 
 def T56(rad):
@@ -61,7 +61,7 @@ def T56(rad):
                      [  0,          0,          0,   1                     ]])
     return mat
 
-# from joint 6 to weolding torch
+# from joint 6 to welding torch
 def T6t(tool_length):
     mat = np.matrix([[ 1,   0,    0,   0.0023532   ],
                      [ 0,   1,    0,   0           ],
@@ -83,7 +83,7 @@ def forward_kinematics(deg1, deg2, deg3, deg4, deg5, deg6):
     Tmat_56 = T56(theta[5])
     Tmat_6t = T6t(tool_length)
     # combine
-    T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56
+    T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45
     # T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
     # move dummy to tool location to verify accuracy of forward kinematics
     move_dummy(T)
@@ -117,7 +117,7 @@ def main():
     # connect
     clientID, _, _ = connect()
     # plan for joint angles to follow
-    motion_plan = np.array([[  0,  0,   0,   0,   0,   0]])
+    motion_plan = np.array([[  0,  0,  0,   0,  0,  0]])
     '''
     motion_plan = np.array([[   0,  0,  0,   0,  0,  0],
                             [  45,  0, 30,   0, 40,  0],

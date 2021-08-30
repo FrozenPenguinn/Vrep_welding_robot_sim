@@ -76,7 +76,7 @@ def main():
     # execution
     for i in range(0,np.size(motion_plan,0)):
         set_joints_deg(motion_plan[i,0],motion_plan[i,1],motion_plan[i,2],motion_plan[i,3],motion_plan[i,4],motion_plan[i,5])
-        time.sleep(3)
+        sleep(3)
     # disconnect
     if (input("Press any key to quit: ") != '|'):
         disconnect()
