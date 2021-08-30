@@ -6,7 +6,7 @@ from toolbox import deg2rad
 
 # initialize
 clientID = 0
-joint_handles = np.zeros(6, dtype = np.int)
+joint_handles = np.zeros(6, dtype = int)
 
 # connect and get handles
 def connect():
@@ -21,29 +21,26 @@ def connect():
     # start simulation
     vrep.simxStartSimulation(clientID, vrep.simx_opmode_oneshot)
     # get handles
-    res, joint_handles[0] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint1', vrep.simx_opmode_blocking)
+    res, joint_handles[0] = vrep.simxGetObjectHandle(clientID, 'IRB140_joint1', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of first joint")
-    res, joint_handles[1] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint2', vrep.simx_opmode_blocking)
+    res, joint_handles[1] = vrep.simxGetObjectHandle(clientID, 'IRB140_joint2', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of second joint")
-    res, joint_handles[2] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint3', vrep.simx_opmode_blocking)
+    res, joint_handles[2] = vrep.simxGetObjectHandle(clientID, 'IRB140_joint3', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of third joint")
-    res, joint_handles[3] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint4', vrep.simx_opmode_blocking)
+    res, joint_handles[3] = vrep.simxGetObjectHandle(clientID, 'IRB140_joint4', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fourth joint")
-    res, joint_handles[4] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint5', vrep.simx_opmode_blocking)
+    res, joint_handles[4] = vrep.simxGetObjectHandle(clientID, 'IRB140_joint5', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fifth joint")
-    res, joint_handles[5] = vrep.simxGetObjectHandle(clientID, 'Kuka_joint6', vrep.simx_opmode_blocking)
+    res, joint_handles[5] = vrep.simxGetObjectHandle(clientID, 'IRB140_joint6', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
         raise Exception("Cannot get handle of sixth joint")
-    res, welding_torch_handle = vrep.simxGetObjectHandle(clientID, 'Welding_torch', vrep.simx_opmode_blocking)
-    if res != vrep.simx_return_ok:
-    	raise Exception('Cannot get handle of welding torch')
-    # return
-    return clientID, joint_handles, welding_torch_handle
+
+    return clientID, joint_handles
 
 def disconnect():
     # stop simulation
@@ -68,7 +65,7 @@ def main():
     # declare global
     global clientID, joint_handles
     # connect
-    clientID, joint_handles, _ = connect()
+    clientID, joint_handles = connect()
     # plan for joint angles to follow
     motion_plan = np.array([[ 90, 45,   0,   0,  0,  0],
                             [-90,-30,   0,   0,  0,  0],

@@ -398,12 +398,10 @@ def connect():
     # return
     return clientID, joint_handles, welding_torch_handle
 
-'''
 def connect():
     # declare global
     global clientID
     global joint_handles
-    global welding_torch_handle
     # just in case, stop all prior connection
     vrep.simxFinish(-1)
     # connect to vrep server
@@ -415,27 +413,24 @@ def connect():
     # start simulation
     vrep.simxStartSimulation(clientID, vrep.simx_opmode_oneshot)
     # get handles
-    status, joint1_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint1',vrep.simx_opmode_blocking)
+    status, joint1_handle = vrep.simxGetObjectHandle(clientID, 'IRB140_joint1',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of first joint")
-    status, joint2_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint2',vrep.simx_opmode_blocking)
+    status, joint2_handle = vrep.simxGetObjectHandle(clientID, 'IRB140_joint2',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of second joint")
-    status, joint3_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint3',vrep.simx_opmode_blocking)
+    status, joint3_handle = vrep.simxGetObjectHandle(clientID, 'IRB140_joint3',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of third joint")
-    status, joint4_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint4',vrep.simx_opmode_blocking)
+    status, joint4_handle = vrep.simxGetObjectHandle(clientID, 'IRB140_joint4',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fourth joint")
-    status, joint5_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint5',vrep.simx_opmode_blocking)
+    status, joint5_handle = vrep.simxGetObjectHandle(clientID, 'IRB140_joint5',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of fifth joint")
-    status, joint6_handle = vrep.simxGetObjectHandle(clientID, 'UR5_joint6',vrep.simx_opmode_blocking)
+    status, joint6_handle = vrep.simxGetObjectHandle(clientID, 'IRB140_joint6',vrep.simx_opmode_blocking)
     if status != vrep.simx_return_ok:
         raise Exception("Cannot get handle of sixth joint")
-    status, welding_torch_handle = vrep.simxGetObjectHandle(clientID, 'Welding_torch', vrep.simx_opmode_blocking)
-    if status!= vrep.simx_return_ok:
-    	raise Exception('Cannot get handle of end effector')
     # wrapping
     joint_handles = np.zeros(6, dtype=np.int)
     joint_handles[0] = joint1_handle
@@ -445,8 +440,7 @@ def connect():
     joint_handles[4] = joint5_handle
     joint_handles[5] = joint6_handle
     # return
-    return clientID, joint_handles, welding_torch_handle
-'''
+    return clientID, joint_handles
 
 def disconnect():
     vrep.simxStopSimulation(clientID, vrep.simx_opmode_oneshot)

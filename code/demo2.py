@@ -19,6 +19,15 @@ tool_length = 0.18
 clientID = 0
 
 # frame transformation
+def Twr():
+    joint_base_displacement_x = 6.8974e-02
+    joint_base_displacement_y = -3.7329e-05
+    mat = np.matrix([[ 1,  0,   0,   joint_base_displacement_x],
+                     [ 0,  1,   0,   joint_base_displacement_y],
+                     [ 0,  0,   1,                           0],
+                     [ 0,  0,   0,                           1]])
+    return mat
+
 def T01(rad):
     mat = np.matrix([[ cos(rad),  -sin(rad),   0,   a[0]*cos(rad + alp[1])],
                      [ sin(rad),   cos(rad),   0,   a[0]*sin(rad + alp[1])],
@@ -75,6 +84,7 @@ def forward_kinematics(deg1, deg2, deg3, deg4, deg5, deg6):
     # convert from deg to rad and wrap
     theta = np.array([deg2rad(deg1), deg2rad(deg2), deg2rad(deg3), deg2rad(deg4), deg2rad(deg5), deg2rad(deg6)])
     # calculate respective transformation matrix
+    Tmat_wr = Twr()
     Tmat_01 = T01(theta[0])
     Tmat_12 = T12(theta[1])
     Tmat_23 = T23(theta[2])
@@ -83,8 +93,7 @@ def forward_kinematics(deg1, deg2, deg3, deg4, deg5, deg6):
     Tmat_56 = T56(theta[5])
     Tmat_6t = T6t(tool_length)
     # combine
-    T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45
-    # T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
+    T = Tmat_wr
     # move dummy to tool location to verify accuracy of forward kinematics
     move_dummy(T)
     # return
@@ -98,7 +107,7 @@ def move_dummy(T):
     # matrix to euler
     euler = rotm2euler(T)
     # get dummy handle
-    res, dummy_handle = vrep.simxGetObjectHandle(clientID, 'Dummy', vrep.simx_opmode_blocking)
+    res, dummy_handle = vrep.simxGetObjectHandle(clientID, 'dummy_test', vrep.simx_opmode_blocking)
     if res != vrep.simx_return_ok:
     	raise Exception('Cannot get handle of dummy')
     sleep(1)
@@ -115,9 +124,9 @@ def move_dummy(T):
 
 def main():
     # connect
-    clientID, _, _ = connect()
+    clientID, _ = connect()
     # plan for joint angles to follow
-    motion_plan = np.array([[  0,  0,  0,   0,  0,  0]])
+    motion_plan = np.array([[  0,  0,  0,   0,   0,  0]])
     '''
     motion_plan = np.array([[   0,  0,  0,   0,  0,  0],
                             [  45,  0, 30,   0, 40,  0],
