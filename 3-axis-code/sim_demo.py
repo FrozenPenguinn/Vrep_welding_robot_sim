@@ -7,31 +7,31 @@ from numpy.linalg import norm
 
 # initialize and DH darameters
 clientID = 0
-joint_handles = np.zeros(4, dtype = np.int)
+joint_handles = np.zeros(4, dtype = int)
 PI = pi
 # base
 r1 = 0.063247
 h1 = 0.10601
 # link1
-r2 = 0.11345
-h2 = 0.10561
-l2 = 0.154998
+r2 = 0.09881
+h2 = 0.09198
+l2 = 0.135 # 135mm
 theta2 = 0.749624 # 42.95
-origin2 = 1.850049 # 106.00
+origin2 = 101.0 / 180 * pi # 101.00
 # link2
-r3 = 0.16145
-h3 = -0.079190
-l3 = 0.179825
+r3 = 0.15263
+h3 = -0.07486
+l3 = 0.179825 # 170mm
 theta3 = -0.456013 # -26.128
-origin3 = 0.645772 # 37.00
+origin3 = 34.0 / 180 * pi # 34.00
 # link3 (tool)
 r4 = 0.035278
 h4 = -0.029195
 
-
-motion_plan = np.zeros(3*700).reshape(700,3)
+motion_plan = np.zeros(3*4000).reshape(4000,3)
 change_plan = motion_plan.copy()
 motion_length = 0
+steps_count = 0
 
 # connect and get handles
 def connect():
@@ -101,6 +101,8 @@ def forward_kinematics(deg1, deg2, deg3):
 
 # inverse kinematics
 def inverse_kinematics(x, y, z):
+    global steps_count
+    steps_count += 1
     # solving for theta 1
     rad1 = round(atan2(y, x), 4)
     # solving for theta 2 and 3
@@ -131,9 +133,9 @@ def record_rads(rad1, rad2, rad3):
 def seperate(start_rad, end_rad):
     dif = [abs(end_rad[0]-start_rad[0]), abs(end_rad[1]-start_rad[1]), abs(end_rad[2]-start_rad[2])]
     max_dif = max(dif)
-    speed = (10.0 * PI) / (20 * 180) # 10 deg per second
+    speed = 2 * (3.0 * PI) / (20 * 180) # 10 deg per second
     N = int((max_dif/speed)+1)
-    print("N = " + str(N))
+    #print("N = " + str(N))
     drad1 = (end_rad[1] - start_rad[1])/N
     drad2 = (end_rad[2] - start_rad[2])/N
     for i in range(1,N+1):
@@ -150,7 +152,7 @@ def draw_circle(current_pos, radius):
     #print("y: " + str(center_y))
     #print("z: " + str(center_z))
     circumference = 2 * PI * radius
-    velocity = 5e-2 / 20 # 1cm/s divided into 50ms steps
+    velocity = 2e-2 / 20 # 1cm/s divided into 50ms steps
     N = int((circumference / velocity)+1)
     #print("N in circle = " + str(N))
     dtheta = 2 * PI / N
@@ -187,6 +189,36 @@ def draw_circle(current_pos, radius):
         motion_rads = inverse_kinematics(current_pos[0],current_pos[1],current_pos[2])
         record_rads(motion_rads[0],motion_rads[1],motion_rads[2])
         #sleep(0.02)
+    for i in range(1, N+1):
+        t = i / N
+        #print("Progress: " + str(format(100*t,".1f")) + "%")
+        #print("radius: " + str(radius))
+        #print("theta: " + str(theta))
+        current_x = center_x + radius * cos(theta)
+        current_y = center_y + radius * sin(theta)
+        #print("current_x : " + str(current_x))
+        #print("current_y : " + str(current_y))
+        theta = theta + dtheta
+        current_pos[0] = current_x
+        current_pos[1] = current_y
+        current_pos[2] = 0
+        motion_rads = inverse_kinematics(current_pos[0],current_pos[1],current_pos[2])
+        record_rads(motion_rads[0],motion_rads[1],motion_rads[2])
+    for i in range(1, N+1):
+        t = i / N
+        #print("Progress: " + str(format(100*t,".1f")) + "%")
+        #print("radius: " + str(radius))
+        #print("theta: " + str(theta))
+        current_x = center_x + radius * cos(theta)
+        current_y = center_y + radius * sin(theta)
+        #print("current_x : " + str(current_x))
+        #print("current_y : " + str(current_y))
+        theta = theta + dtheta
+        current_pos[0] = current_x
+        current_pos[1] = current_y
+        current_pos[2] = 0
+        motion_rads = inverse_kinematics(current_pos[0],current_pos[1],current_pos[2])
+        record_rads(motion_rads[0],motion_rads[1],motion_rads[2])
     return
 
 # draw line
@@ -209,7 +241,7 @@ def lerp(start_pos, goal_pos):
         motion_rads = inverse_kinematics(start_pos[0],start_pos[1],start_pos[2])
         record_rads(motion_rads[0],motion_rads[1],motion_rads[2])
         #sleep(0.02)
-    print("lerp done")
+    #print("lerp done")
     return
 
 def move_dummy(goal_pos):
@@ -228,6 +260,7 @@ def move_dummy(goal_pos):
 
 def save():
     f = open('./motion_plan','w')
+    print(motion_length)
     for i in range(0,motion_length):
         f.write("{:.4f}".format(change_plan[i][0]) + "," + "{:.4f}".format(change_plan[i][1]) + "," + "{:.4f}".format(change_plan[i][2]) + "\n")
     f.write(" ")
@@ -236,13 +269,13 @@ def save():
 
 def main():
     # declare global
-    print("hello")
+    #print("hello")
     global clientID, joint_handles
     # connect
     clientID, joint_handles = connect()
-    print("connect")
+    #print("connect")
     # plan for joint angles to follow
-    destination_points = np.array([0.32342, 0, 0.0])
+    destination_points = np.array([0.27342, 0, 0.0])
     # execution
     # print(destination_points)
     #move_dummy(destination_points)
@@ -254,16 +287,20 @@ def main():
     #print("deg1 = "+ str(round(rad2deg(rad1),4)))
     #print("deg2 = "+ str(round(rad2deg(rad2),4)))
     #print("deg3 = "+ str(round(rad2deg(rad3),4)))
-    print("origin2 = " + str(origin2))
-    print("origin3 = " + str(origin3))
-    print("theta2 = " + str(theta2))
-    print("theta3 = " + str(theta3))
+    #print("origin2 = " + str(origin2))
+    #print("origin3 = " + str(origin3))
+    #print("theta2 = " + str(theta2))
+    #print("theta3 = " + str(theta3))
     seperate([0,origin2-theta2,origin3-theta3-(origin2-theta2)],[0,0,0])
-    print("these are the differences: ")
-    print(origin2-theta2)
-    print(origin3-theta3-(origin2-theta2))
+    #print("these are the differences: ")
+    #print(origin2-theta2)
+    #print(origin3-theta3-(origin2-theta2))
     seperate([0,0,0],[rad1,rad2,rad3])
-    draw_circle([0.32342, 0, 0.0],0.06)
+    draw_circle([0.27342, 0, 0.0],0.04)
+    #draw_circle([0.32342, 0, 0.0],0.06)
+    #draw_circle([0.32342, 0, 0.0],0.06)
+    #draw_circle([0.32342, 0, 0.0],0.06)
+    #draw_circle([0.32342, 0, 0.0],0.06)
     # print("done")
     #sleep(2)
     set_joints_rad(0,origin2-theta2,origin3-theta3-(origin2-theta2))
@@ -309,6 +346,8 @@ def main():
         change_plan[i+1][0] = (motion_plan[i+1][0] - motion_plan[i][0])
         change_plan[i+1][1] = -(motion_plan[i+1][1] - motion_plan[i][1])
         change_plan[i+1][2] = -(motion_plan[i+1][2] - motion_plan[i][2]) + change_plan[i+1][1]
+
+    print(steps_count)
     # disconnect
     save()
     sleep(1)

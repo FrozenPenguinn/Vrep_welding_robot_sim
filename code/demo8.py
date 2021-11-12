@@ -1,9 +1,8 @@
-# import libraries:
-import vrep
-import time
+# testing
 import numpy as np
+import time
 import math
-# from connection import *
+import vrep
 from toolbox import *
 
 # connect and get handles
@@ -38,6 +37,8 @@ def inverse_kinematics(pos_ori_mat):
         goal_P = pos_ori_mat[0:3,3]
         goal_R = np.asmatrix(rotm2quat(pos_ori_mat))
         goal_R = goal_R.reshape((4,1))
+        #print(goal_R)
+        #print(goal_P)
         goal_PR_mat = np.vstack((goal_P,goal_R))
         #print("goal_PR_mat : ")
         #print(goal_PR_mat)
@@ -311,84 +312,33 @@ def Forward_kinematics(rad1, rad2, rad3, rad4, rad5, rad6):
     # return
     return T
 
-# test
-Move_to_joint_position_deg(0,0,0,0,0,0)
+# handles of joints and dummy
+status, dummy_handle = vrep.simxGetObjectHandle(clientID, 'dummy_test', vrep.simx_opmode_blocking)
+if status!= vrep.simx_return_ok:
+    raise Exception('Cannot get handle of dummy')
 
+#while True:
+status, dummy_pos = vrep.simxGetObjectPosition(clientID, dummy_handle, -1, vrep.simx_opmode_blocking)
+#print(dummy_pos)
+status, dummy_quat = vrep.simxGetObjectQuaternion(clientID, dummy_handle, -1, vrep.simx_opmode_blocking)
+#print(dummy_quat)
 
-pos_ori_mat_1 = np.matrix([[1,   0,   0,   0.7000],
-                           [0,   1,   0,   0.0000],
-                           [0,   0,   1,   0.0000],
-                           [0,   0,   0,   1     ]])
-#set_goal(pos_ori_mat_1)
-inverse_kinematics(pos_ori_mat_1)
-time.sleep(1)
-#Disconnect(clientID)
-#lerp_beta(current_mat, pos_ori_mat_1)
+des = np.zeros((4,4), dtype=float)
+des[0:3,0:3] = quat2rotm(dummy_quat)
+des[0:3,3] = dummy_pos
+print(des)
 
-# pure angle change (failure)
-pos_ori_mat_12 = np.matrix([[1,   0,   0,   0.5000],
-                            [0,   1,   0,   0.0000],
-                            [0,   0,   1,   0.0000],
-                            [0,   0,   0,   1     ]])
-#set_goal(pos_ori_mat_12)
-lerp_beta(pos_ori_mat_1, pos_ori_mat_12)
-#inverse_kinematics(pos_ori_mat_12)
+pos_ori_mat = np.matrix([[1,   0,   0,   0.6000],
+                         [0,   1,   0,   0.0000],
+                         [0,   0,   1,   0.3000],
+                         [0,   0,   0,   1     ]])
+
+print(pos_ori_mat)
+
+inverse_kinematics(des)
+
 
 '''
-pos_ori_mat_2 = np.matrix([[0,   1,   0,  -1.2235e-01],
-                           [1,   0,   0,   0.5000e-00],
-                           [0,   0,  -1,   4.0000e-01],
-                           [0,   0,   0,   1         ]])
-set_goal(pos_ori_mat_2)
-# inverse_kinematics(pos_ori_mat_2)
-lerp_beta(pos_ori_mat_12, pos_ori_mat_2)
-
-pos_ori_mat_3 = np.matrix([[0,   1,   0,  -1.2235e-01],
-                           [1,   0,   0,   0.4000e-00],
-                           [0,   0,  -1,   0.0000e-02],
-                           [0,   0,   0,   1         ]])
-set_goal(pos_ori_mat_3)
-#print("goal: ")
-#print(pos_ori_mat_3)
-lerp_beta(pos_ori_mat_2,pos_ori_mat_3)
-time.sleep(0.5)
-draw_circle(pos_ori_mat_3, 2.0000e-02)
-
-pos_ori_mat_4 = np.matrix([[0,   1,   0,  -1.2235e-01],
-                           [1,   0,   0,   0.4000e-00],
-                           [0,   0,  -1,   2.0000e-01],
-                           [0,   0,   0,   1         ]])
-set_goal(pos_ori_mat_4)
-#print("goal: ")
-#print(pos_ori_mat_3)
-lerp_beta(pos_ori_mat_3,pos_ori_mat_4)
+if (input("Press any key to quit: ") != '|'):
+    disconnect()
 '''
-'''
-pos_ori_mat_4 = np.matrix([[0,   1,   0,  -1.2235e-01],
-                           [1,   0,   0,   0.7000e-00],
-                           [0,   0,  -1,   3.0000e-01],
-                           [0,   0,   0,   1         ]])
-
-pos_ori_mat_4 = np.matrix([[0,   1,   0,  -1.2235e-01],
-                           [0,   0,   1,   0.7000e-00],
-                           [1,   0,   0,   3.0000e-01],
-                           [0,   0,   0,   1         ]])
-set_goal(pos_ori_mat_4)
-lerp_beta(pos_ori_mat_3,pos_ori_mat_4)
-
-pos_ori_mat_5 = np.matrix([[0,   1,   0,  -3.2235e-01],
-                           [1,   0,   0,   0.7000e-00],
-                           [0,   0,  -1,   3.0000e-01],
-                           [0,   0,   0,   1         ]])
-set_goal(pos_ori_mat_5)
-lerp_beta(pos_ori_mat_3,pos_ori_mat_5)
-
-set_goal(pos_ori_mat_2)
-lerp_beta(pos_ori_mat_5,pos_ori_mat_2)
-'''
-time.sleep(1)
-
-print('Done3')
-
-# stop simulation and close connections
-disconnect()

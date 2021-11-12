@@ -11,7 +11,7 @@ goal = np.array([0.0,0.0,0.0,0.0,0.0,0.0])
 #forward_kinematics(goal)
 #forward_kinematics(0.0,0.0,0.0,0.0,0.0,0.0)
 
-clientID, joint_handles, welding_torch_handle = connect()
+clientID, joint_handles = connect()
 
 pos_ori_mat_1 = np.matrix([[0,   1,   0,  -1.2235e-01],
                            [1,   0,   0,   0.7000e-00],

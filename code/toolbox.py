@@ -12,16 +12,18 @@
 # import libraries
 import vrep
 import math
+from math import pi, cos, sin
 import time
 import numpy as np
 import numpy.linalg as lg
 
 # constants and DH parameters
 PI = math.pi
-d = np.array([0.089159,  0,      0,        0.10915,  0.09465,  0.0823])
-a = np.array([0,         0.425,  0.39225,  0,        0,        0])
-joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-tool_length = 0.23
+d = np.array([   0.352,      0,      0,  0.380,     0,   0.045])
+a = np.array([   0.070,  0.360,      0,      0,     0,       0])
+alp = np.array([ -pi/2,      0,  -pi/2,   pi/2,  pi/2,       0])
+tool_length = 0.075
+clientID = 0
 wait_time = 0
 
 # ID and handles
@@ -116,67 +118,98 @@ def quat2rotm(quat):
 
 ''' frame transformations '''
 
+def Twr():
+    joint_base_displacement_x = 6.8974e-02
+    joint_base_displacement_y = -3.7329e-05
+    mat = np.matrix([[ 1,  0,   0,   joint_base_displacement_x],
+                     [ 0,  1,   0,   joint_base_displacement_y],
+                     [ 0,  0,   1,                           0],
+                     [ 0,  0,   0,                           1]])
+    return mat
+
+def T_im1_i(theta):
+    mat = np.matrix([[ cos(theta),  -sin(theta)*cos(alpha),   sin(theta)*sin(alpha),   a*cos(theta)],
+                     [ sin(theta),   cos(theta)*cos(alpha),  -cos(theta)*sin(alpha),   a*sin(theta)],
+                     [ 0,            sin(alpha),              cos(alpha),              d           ],
+                     [ 0,            0,                       0,                       1           ]])
+    return mat
+
 def T01(rad):
-    mat = np.matrix([[0,  -math.sin(rad),  -math.cos(rad),   0   ],
-                     [0,   math.cos(rad),  -math.sin(rad),   0   ],
-                     [1,   0,               0,               d[0]],
-                     [0,   0,               0,               1   ]])
+    mat = np.matrix([[ cos(rad),   0,    -sin(rad),   a[0]*cos(rad)],
+                     [ sin(rad),   0,     cos(rad),   a[0]*sin(rad)],
+                     [ 0,         -1,     0,          d[0]         ],
+                     [ 0,          0,     0,          1            ]])
     return mat
 
 def T12(rad):
-    mat = np.matrix([[math.cos(rad),  -math.sin(rad),   0,   a[1]*math.cos(rad)],
-                     [math.sin(rad),   math.cos(rad),   0,   a[1]*math.sin(rad)],
-                     [0,               0,               1,   0                 ],
-                     [0,               0,               0,   1                 ]])
+    rad = - rad - pi/2
+    mat = np.matrix([[ cos(rad),  -sin(rad),     0,   a[1]*cos(rad)],
+                     [ sin(rad),   cos(rad),     0,   a[1]*sin(rad)],
+                     [ 0,          0,            1,   d[1]         ],
+                     [ 0,          0,            0,   1            ]])
     return mat
 
 def T23(rad):
-    mat = np.matrix([[math.cos(rad),  -math.sin(rad),   0,   a[2]*math.cos(rad)],
-                     [math.sin(rad),   math.cos(rad),   0,   a[2]*math.sin(rad)],
-                     [0,               0,               1,   0                 ],
-                     [0,               0,               0,   1                 ]])
+    rad = - rad
+    mat = np.matrix([[ cos(rad),   0,    -sin(rad),   a[2]*cos(rad)],
+                     [ sin(rad),   0,     cos(rad),   a[2]*sin(rad)],
+                     [ 0,         -1,     0,          d[2]         ],
+                     [ 0,          0,     0,          1            ]])
     return mat
 
 def T34(rad):
-    mat = np.matrix([[ 0,  -math.sin(rad),  math.cos(rad),   0   ],
-                     [ 0,   math.cos(rad),  math.sin(rad),   0   ],
-                     [-1,   0,              0,               d[3]],
-                     [ 0,   0,              0,               1   ]])
+    mat = np.matrix([[ cos(rad),   0,     sin(rad),   a[3]*cos(rad)],
+                     [ sin(rad),   0,    -cos(rad),   a[3]*sin(rad)],
+                     [ 0,          1,     0,          d[3]         ],
+                     [ 0,          0,     0,          1            ]])
     return mat
 
 def T45(rad):
-    mat = np.matrix([[0,  -math.sin(rad),  -math.cos(rad),   0   ],
-                     [0,   math.cos(rad),  -math.sin(rad),   0   ],
-                     [1,   0,               0,               d[4]],
-                     [0,   0,               0,               1   ]])
+    rad =  - rad + pi
+    mat = np.matrix([[ cos(rad),   0,     sin(rad),   a[4]*cos(rad)],
+                     [ sin(rad),   0,    -cos(rad),   a[4]*sin(rad)],
+                     [ 0,          1,     0,          d[4]         ],
+                     [ 0,          0,     0,          1            ]])
     return mat
 
 def T56(rad):
-    mat = np.matrix([[math.cos(rad),  -math.sin(rad),   0,   0   ],
-                     [math.sin(rad),   math.cos(rad),   0,   0   ],
-                     [0,               0,               1,   d[5]],
-                     [0,               0,               0,   1   ]])
+    #rad = - rad
+    mat = np.matrix([[ cos(rad),  -sin(rad),     0,   a[5]*cos(rad)],
+                     [ sin(rad),   cos(rad),     0,   a[5]*sin(rad)],
+                     [ 0,          0,            1,   d[5]         ],
+                     [ 0,          0,            0,   1            ]])
     return mat
 
+# from joint 6 to pen
 def T6t(tool_length):
-    mat = np.matrix([[1,   0,   0,   0           ],
-                     [0,   1,   0,   0           ],
-                     [0,   0,   1,   tool_length ],
-                     [0,   0,   0,   1           ]])
+    mat = np.matrix([[-1,   0,    0,   0           ],
+                     [ 0,   1,    0,   0           ],
+                     [ 0,   0,   -1,   tool_length ],
+                     [ 0,   0,    0,   1           ]])
     return mat
+
 
 ''' robotic arm motion resoutions '''
 
 # 在python中使用 *args 来进行函数的重载，不过要注意类型的转换
+# from joint angles get cartesian position and orientation
 def forward_kinematics(rad1, rad2, rad3, rad4, rad5, rad6):
-    Tmat_01 = T01(rad1)
-    Tmat_12 = T12(rad2)
-    Tmat_23 = T23(rad3)
-    Tmat_34 = T34(rad4)
-    Tmat_45 = T45(rad5)
-    Tmat_56 = T56(rad6)
+    # convert from deg to rad and wrap
+    theta = np.array([rad1, rad2, rad3, rad4, rad5, rad6])
+    # calculate respective transformation matrix
+    Tmat_wr = Twr()
+    Tmat_01 = T01(theta[0])
+    Tmat_12 = T12(theta[1])
+    Tmat_23 = T23(theta[2])
+    Tmat_34 = T34(theta[3])
+    Tmat_45 = T45(theta[4])
+    Tmat_56 = T56(theta[5])
     Tmat_6t = T6t(tool_length)
-    T = Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
+    # combine
+    T = Tmat_wr * Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
+    # move dummy to tool location to verify accuracy of forward kinematics
+    #move_dummy(T)
+    # return
     return T
 
 def jacobian(rads):
@@ -349,7 +382,7 @@ def move_dummy(x,y,z,rx,ry,rz):
     return
 
 ''' Communications '''
-
+'''
 def connect():
     # declare global
     global clientID
@@ -397,7 +430,7 @@ def connect():
     joint_handles[5] = joint6_handle
     # return
     return clientID, joint_handles, welding_torch_handle
-
+'''
 def connect():
     # declare global
     global clientID

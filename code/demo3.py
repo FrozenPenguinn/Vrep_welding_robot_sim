@@ -7,13 +7,13 @@ import math
 from toolbox import *
 
 # connect and get handles
-clientID, joint_handle, end_effector_handle = connect()
+clientID, joint_handle = connect()
 
 # initialize
 current_angles = [0,0,0,0,0,0]
 goal_angles = np.zeros(6)
 dtheta = 0.001
-tool_length = 0.23
+tool_length = 0.08
 
 # Solving Ax=b
 def inverse_kinematics(pos_ori_mat):
@@ -47,7 +47,7 @@ def inverse_kinematics(pos_ori_mat):
         #print("error vector : ")
         #print(error_vector)
         # check if error is small enough to quit
-        if (np.linalg.norm(error_vector) < 0.01):
+        if (np.linalg.norm(error_vector) < 0.0001):
             Move_to_joint_position_rad(goal_angles[0],goal_angles[1],goal_angles[2],goal_angles[3],goal_angles[4],goal_angles[5])
             print("Arrived at goal location")
             print("total iterations = " + str(count))
@@ -132,10 +132,11 @@ def inverse_kinematics(pos_ori_mat):
         '''
         for i in range(0,6):
             goal_angles[i] = current_angles[i] + dq[i]
-        #Move_to_joint_position_rad(goal_angles[0],goal_angles[1],goal_angles[2],goal_angles[3],goal_angles[4],goal_angles[5])
+        Move_to_joint_position_rad(goal_angles[0],goal_angles[1],goal_angles[2],goal_angles[3],goal_angles[4],goal_angles[5])
         #print("goal_angle:")
         #print(goal_angles)
-        #time.sleep(0.01)
+        time.sleep(0.01)
+        #print("hi")
         #print("end count = " + str(count))
     if (count > 200):
         print('loop too many times')
@@ -286,7 +287,7 @@ def move_dummy(x,y,z,rx,ry,rz):
     position = np.array([x,y,z])
     orientation = np.array([rx,ry,rz])
     # get dummy handle
-    status, dummy_handle = vrep.simxGetObjectHandle(clientID, 'Dummy', vrep.simx_opmode_blocking)
+    status, dummy_handle = vrep.simxGetObjectHandle(clientID, 'dummy_test', vrep.simx_opmode_blocking)
     if status!= vrep.simx_return_ok:
     	raise Exception('Cannot get handle of dummy')
     time.sleep(1)
@@ -306,10 +307,11 @@ def set_goal(pos_ori_mat):
     return
 
 # changed to based on radian
-def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
+def Forward_kinematics(rad1, rad2, rad3, rad4, rad5, rad6):
     # convert from deg to rad and wrap
-    theta = np.array([deg1,deg2,deg3,deg4,deg5,deg6])
+    theta = np.array([rad1, rad2, rad3, rad4, rad5, rad6])
     # calculate respective transformation matrix
+    Tmat_wr = Twr()
     Tmat_01 = T01(theta[0])
     Tmat_12 = T12(theta[1])
     Tmat_23 = T23(theta[2])
@@ -318,15 +320,9 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
     Tmat_56 = T56(theta[5])
     Tmat_6t = T6t(tool_length)
     # combine
-    T = Tmat_01*Tmat_12*Tmat_23*Tmat_34*Tmat_45*Tmat_56*Tmat_6t
-    # cut
-    T_reduced = T[0:3]
-    # show_dummy(T_reduced)
-    # print
-    #print("Theoretical result: ")
-    #print(T)
-    #print('euler of T: ')
-    #print(rotm2euler(T_reduced))
+    T = Tmat_wr * Tmat_01 * Tmat_12 * Tmat_23 * Tmat_34 * Tmat_45 * Tmat_56 * Tmat_6t
+    # move dummy to tool location to verify accuracy of forward kinematics
+    #move_dummy(T)
     # return
     return T
 
@@ -334,10 +330,10 @@ def Forward_kinematics(deg1,deg2,deg3,deg4,deg5,deg6):
 Move_to_joint_position_deg(0,0,0,0,0,0)
 # diff xyz, same ori
 
-pos_ori_mat = np.matrix([[0,   1,   0,   1.2235e-01],
-                         [0,   0,   1,   0.6000e-00],
-                         [1,   0,   0,   6.0000e-01],
-                         [0,   0,   0,   1         ]])
+pos_ori_mat = np.matrix([[1,   0,   0,   0.6000],
+                         [0,   1,   0,   0.0000],
+                         [0,   0,   1,   0.6000],
+                         [0,   0,   0,   1     ]])
 set_goal(pos_ori_mat)
 inverse_kinematics(pos_ori_mat)
 '''
@@ -348,17 +344,17 @@ pos_ori_mat = np.matrix([[0,   1,   0,  -1.2235e-01],
 set_goal(pos_ori_mat)
 inverse_kinematics(pos_ori_mat)
 '''
-pos_ori_mat = np.matrix([[0,   1,   0,  -1.2235e-01],
-                         [1,   0,   0,   0.5000e-00],
-                         [0,   0,  -1,   3.0000e-01],
-                         [0,   0,   0,   1         ]])
+pos_ori_mat = np.matrix([[1,   0,   0,   0.6000],
+                         [0,   1,   0,   0.0000],
+                         [0,   0,   1,   0.3000],
+                         [0,   0,   0,   1     ]])
 set_goal(pos_ori_mat)
 inverse_kinematics(pos_ori_mat)
 
-pos_ori_mat = np.matrix([[0,   1,   0,  -1.2235e-01],
-                         [1,   0,   0,   0.7000e-00],
-                         [0,   0,  -1,   3.0000e-01],
-                         [0,   0,   0,   1         ]])
+pos_ori_mat = np.matrix([[1,   0,   0,   0.5000],
+                         [0,   1,   0,   0.0000],
+                         [0,   0,   1,   0.3000],
+                         [0,   0,   0,   1     ]])
 set_goal(pos_ori_mat)
 inverse_kinematics(pos_ori_mat)
 time.sleep(1)
